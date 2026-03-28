@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SlidyKitty.Code/SlidyKitty.Code.csproj" />
+  <Project Path="SlidyKitty.Desktop/SlidyKitty.Desktop.csproj" />
+</Solution>
