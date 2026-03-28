@@ -1,0 +1,66 @@
+LICENSE FOR GAME ASSETS
+========================
+
+Copyright (c) 2026 Aventius Ltd
+
+This license applies to all non-code assets located in the various directories
+of this project, including but not limited to:
+
+- images, sprites, textures, models
+- animations and visual effects
+- audio, sound effects, music
+- fonts (unless separately licensed)
+- narrative text, dialogue, and story content
+- any other creative or artistic content
+
+These assets are NOT licensed under the MIT License or any other open-source
+software license.
+
+All rights to these assets are reserved by the copyright holder.
+
+------------------------------------
+PERMITTED USE
+------------------------------------
+
+You are granted a limited, non-exclusive, non-transferable license to:
+
+1. Use, display, and reproduce the assets **only as part of this game project**.
+2. Modify the assets **only for personal use or for contributions to this project**.
+3. Distribute the assets **only when included as part of this game project**
+   (including modified versions or forks).
+
+------------------------------------
+PROHIBITED USE
+------------------------------------
+
+You may NOT:
+
+1. Use the assets in your own independent projects.
+2. Redistribute the assets separately from the game.
+3. Sell, license, or otherwise commercially exploit the assets.
+4. Use the assets in any commercial product without explicit written permission.
+5. Upload the assets to asset marketplaces or repositories.
+6. Claim authorship or ownership of the assets.
+
+------------------------------------
+COMMERCIAL USE
+------------------------------------
+
+Commercial use of the assets (including inclusion in paid or ad-supported games)
+requires **prior written permission** from the copyright holder.
+
+------------------------------------
+CODE VS ASSETS CLARIFICATION
+------------------------------------
+
+All source code in this project is licensed separately under the MIT License,
+found in the file named "LICENSE".
+
+This LICENSE-ASSETS file applies **only** to the artistic and creative assets.
+
+------------------------------------
+CONTACT
+------------------------------------
+
+For questions or commercial licensing requests, contact us via our website
+at: aventius.co.uk
