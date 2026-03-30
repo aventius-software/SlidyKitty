@@ -1,0 +1,139 @@
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended;
+using nkast.Aether.Physics2D.Collision.Shapes;
+using SlidyKitty.Code.Physics;
+using System;
+using System.Collections.Generic;
+
+namespace SlidyKitty.Code.Map;
+
+internal class HillService
+{
+    private readonly OrthographicCamera _camera;
+    private readonly PhysicsService _physicsService;
+    private readonly ShapeDrawingService _shapeDrawingService;
+
+    public HillService(OrthographicCamera camera, PhysicsService physicsService, ShapeDrawingService shapeDrawingService)
+    {
+        _camera = camera;
+        _physicsService = physicsService;
+        _shapeDrawingService = shapeDrawingService;
+    }
+    
+    public Hill CreateHill(Vector2 position, int numberOfSegments, int segmentWidth, int steepness, int height)
+    {
+        // Reserve an array to store the hill segment
+        var hillSegments = new HillSegment[numberOfSegments];
+
+        // Set initial starting position
+        var x = position.X;
+        var y = position.Y;
+
+        // Per hill we gradually increase our angle per segment to cover full 360 degrees
+        var angleIncrement = MathHelper.ToRadians(360 / numberOfSegments);
+
+        // Now, generate requested number of segments for this hill
+        for (var hillSegmentIndex = 0; hillSegmentIndex < numberOfSegments; hillSegmentIndex++)
+        {
+            // If this is NOT the first segment of the hill, we use
+            // the Y coordinate of the previous segment
+            if (hillSegmentIndex > 0) y = hillSegments[hillSegmentIndex - 1].End.Y;
+
+            // Calculate start coordinates for this segment
+            var start = new Vector2(x, y);
+
+            // Now calculate the position of the end of the segment
+            x += segmentWidth;
+            var offsetY = MathF.Sin(hillSegmentIndex * angleIncrement) * steepness;
+            var end = new Vector2(x, y + offsetY);
+
+            // Create a physics body for this segment and attach an 'edge' (just a 'line' effectively)
+            var body = _physicsService.World.CreateBody();
+            var edgeFixture = body
+                .CreateFixture(new EdgeShape(_physicsService.ToSimUnits(start), _physicsService.ToSimUnits(end)));
+
+            // Set its friction to some very low value (to make it slippery)
+            edgeFixture.Friction = 0.01f;
+
+            // Add this segment to the list...
+            hillSegments[hillSegmentIndex] = new HillSegment
+            {
+                Start = start,
+                End = end,
+                Body = body
+            };
+        }
+
+        return new Hill
+        {
+            Height = height,
+            Segments = hillSegments
+        };
+    }
+
+    public List<Hill> CreateHills(Vector2 startingPosition, int numberOfHills, int height = 1000)
+    {
+        var hills = new List<Hill>();
+        var r = new Random();
+        var position = startingPosition;
+
+        for (var i = 0; i < numberOfHills; i++)
+        {
+            var hill = CreateHill(
+                position: position,
+                numberOfSegments: 32,
+                segmentWidth: 16,
+                steepness: r.Next(-25, 25),
+                height: height);
+
+            hills.Add(hill);
+            position = hills[^1].Segments[^1].End;
+        }
+        
+        return [.. hills];
+    }
+
+    public void DeleteHill(Hill hill)
+    {
+        foreach (var segment in hill.Segments)
+            if (segment.Body is not null)
+                _physicsService.World.Remove(segment.Body);
+    }
+
+    public void DrawHill(Hill hill, Effect? terrainShader = null)
+    {
+        // First draw the map (so that it will be under the character), we start
+        // the shape drawing batch using current camera view matrix
+        _shapeDrawingService.BeginBatch(_camera.GetViewMatrix());
+
+        foreach (var segment in hill.Segments)
+        {
+            // Get the start and end coordinates of the segment
+            var start = segment.Start;
+            var end = segment.End;
+
+            // Set shader when drawing terrain quad
+            _shapeDrawingService.SetCustomShader(terrainShader);
+
+            // Draw this terrain 'segment' which will be affected by our terrain shader. The
+            // shader should 'draw' some kind pattern on the terrain. If no shader is used
+            // then this will just be a simple flat coloured quad...
+            _shapeDrawingService.DrawFilledQuadrilateral(
+                colour: new Color(0, 0, 255, 255),
+                topLeftX: (int)start.X, topLeftY: (int)start.Y,
+                topRightX: (int)end.X - 0, topRightY: (int)end.Y,
+                bottomRightX: (int)end.X - 0, bottomRightY: hill.Height,
+                bottomLeftX: (int)start.X, bottomLeftY: hill.Height);
+
+            // Disable any custom terrain shader
+            _shapeDrawingService.SetCustomShader(null);
+
+            // Draw ground line
+            _shapeDrawingService.DrawLine(start, end, Color.White);
+        }
+
+        // Done drawing shapes
+        _shapeDrawingService.EndBatch();
+    }    
+}
