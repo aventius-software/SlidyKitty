@@ -4,17 +4,25 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using MonoGame.Extended.ECS;
 using MonoGame.Extended.ECS.Systems;
+using System;
 using System.Collections.Generic;
 
 namespace SlidyKitty.Code.Map;
 
 internal class MapSystem : UpdateSystem, IDrawSystem
 {
+    private const int _hillHeight = 1000;
+    private const int _maxSteepness = 25;
+    private const int _minSteepness = -25;
+    private const int _numberOfSegmentsPerHill = 32;
+    private const int _segmentWidth = 16;
+
     private readonly OrthographicCamera _camera;
     private readonly ContentManager _contentManager;
     private readonly HillService _hillService;
 
     private List<Hill> _hills = [];
+    private readonly Random _random = new();
     private Effect _terrainShader = default!;
 
     public MapSystem(OrthographicCamera camera, ContentManager contentManager, HillService hillGeneratorService)
@@ -36,10 +44,16 @@ internal class MapSystem : UpdateSystem, IDrawSystem
         // pattern instead of just having a flat coloured terrain
         _terrainShader = _contentManager.Load<Effect>("Shaders/terrain shader");
 
-        // Create some hills to start with, we will add more as the game goes on in
-        // the update method. For now we're just testing with a few hills to make sure
-        // they are drawn correctly
-        _hills = _hillService.CreateHills(Vector2.Zero, 18);
+        // Create some hills to start with, we will add more as
+        // the game goes on in the update method
+        _hills = _hillService.CreateHills(
+            startingPosition: Vector2.Zero,
+            numberOfHills: 10,
+            height: _hillHeight,
+            numberOfSegmentsPerHill: _numberOfSegmentsPerHill,
+            segmentWidth: _segmentWidth,
+            minSteepness: _minSteepness,
+            maxSteepness: _maxSteepness);
 
         base.Initialize(world);
     }
@@ -50,13 +64,28 @@ internal class MapSystem : UpdateSystem, IDrawSystem
         // add a new one to the right of the screen so we have an 'infinite' scrolling hill effect
         for (int hill = 0; hill < _hills.Count; hill++)
         {
+            // Has the leftmost hill gone off the left of the camera?
             if (IsHillOffCameraToTheLeft(_hills[hill]))
             {
-                // First remove the hill from the service so it can dispose of any resources
+                // Yes, ok, first remove the hill from the hill service
+                // so it can dispose of any resources correctly (i.e. physics)
                 _hillService.DeleteHill(_hills[hill]);
 
-                // The remove from our list of hills so it's no longer drawn
+                // Next, remove from our list of hills so it's no longer drawn
                 _hills.RemoveAt(hill);
+
+                // Finally, add a new hill to the end of the list
+                var lastHill = _hills[^1];
+                var position = new Vector2(lastHill.Segments[^1].End.X, lastHill.Segments[^1].End.Y);
+
+                var newHill = _hillService.CreateHill(
+                    position: position,
+                    numberOfSegments: _numberOfSegmentsPerHill,
+                    segmentWidth: _segmentWidth,
+                    steepness: _random.Next(_minSteepness, _maxSteepness),
+                    height: _hillHeight);
+
+                _hills.Add(newHill);
             }
         }
     }

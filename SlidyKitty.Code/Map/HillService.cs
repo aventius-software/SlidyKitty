@@ -20,47 +20,48 @@ internal class HillService
         _physicsService = physicsService;
         _shapeDrawingService = shapeDrawingService;
     }
-    
+
     public Hill CreateHill(Vector2 position, int numberOfSegments, int segmentWidth, int steepness, int height)
     {
         // Reserve an array to store the hill segment
         var hillSegments = new HillSegment[numberOfSegments];
 
         // Set initial starting position
-        var x = position.X;
-        var y = position.Y;
+        var segmentX = position.X;
+        var segmentY = position.Y;
 
         // Per hill we gradually increase our angle per segment to cover full 360 degrees
         var angleIncrement = MathHelper.ToRadians(360 / numberOfSegments);
 
         // Now, generate requested number of segments for this hill
-        for (var hillSegmentIndex = 0; hillSegmentIndex < numberOfSegments; hillSegmentIndex++)
+        for (var segmentIndex = 0; segmentIndex < numberOfSegments; segmentIndex++)
         {
             // If this is NOT the first segment of the hill, we use
             // the Y coordinate of the previous segment
-            if (hillSegmentIndex > 0) y = hillSegments[hillSegmentIndex - 1].End.Y;
+            if (segmentIndex > 0)
+                segmentY = hillSegments[segmentIndex - 1].End.Y;
 
             // Calculate start coordinates for this segment
-            var start = new Vector2(x, y);
+            var segmentStartPosition = new Vector2(segmentX, segmentY);
 
             // Now calculate the position of the end of the segment
-            x += segmentWidth;
-            var offsetY = MathF.Sin(hillSegmentIndex * angleIncrement) * steepness;
-            var end = new Vector2(x, y + offsetY);
+            segmentX += segmentWidth;
+            var offsetY = MathF.Sin(segmentIndex * angleIncrement) * steepness;
+            var segmentEndPosition = new Vector2(segmentX, segmentY + offsetY);
 
             // Create a physics body for this segment and attach an 'edge' (just a 'line' effectively)
             var body = _physicsService.World.CreateBody();
             var edgeFixture = body
-                .CreateFixture(new EdgeShape(_physicsService.ToSimUnits(start), _physicsService.ToSimUnits(end)));
+                .CreateFixture(new EdgeShape(_physicsService.ToSimUnits(segmentStartPosition), _physicsService.ToSimUnits(segmentEndPosition)));
 
             // Set its friction to some very low value (to make it slippery)
             edgeFixture.Friction = 0.01f;
 
             // Add this segment to the list...
-            hillSegments[hillSegmentIndex] = new HillSegment
+            hillSegments[segmentIndex] = new HillSegment
             {
-                Start = start,
-                End = end,
+                Start = segmentStartPosition,
+                End = segmentEndPosition,
                 Body = body
             };
         }
@@ -72,7 +73,14 @@ internal class HillService
         };
     }
 
-    public List<Hill> CreateHills(Vector2 startingPosition, int numberOfHills, int height = 1000)
+    public List<Hill> CreateHills(
+        Vector2 startingPosition,
+        int numberOfHills,
+        int height = 1000,
+        int numberOfSegmentsPerHill = 32,
+        int segmentWidth = 16,
+        int minSteepness = -25,
+        int maxSteepness = 25)
     {
         var hills = new List<Hill>();
         var r = new Random();
@@ -82,15 +90,15 @@ internal class HillService
         {
             var hill = CreateHill(
                 position: position,
-                numberOfSegments: 32,
-                segmentWidth: 16,
-                steepness: r.Next(-25, 25),
+                numberOfSegments: numberOfSegmentsPerHill,
+                segmentWidth: segmentWidth,
+                steepness: r.Next(minSteepness, maxSteepness),
                 height: height);
 
             hills.Add(hill);
             position = hills[^1].Segments[^1].End;
         }
-        
+
         return [.. hills];
     }
 
@@ -135,5 +143,5 @@ internal class HillService
 
         // Done drawing shapes
         _shapeDrawingService.EndBatch();
-    }    
+    }
 }
