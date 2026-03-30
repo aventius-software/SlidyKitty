@@ -23,8 +23,8 @@ internal class ShapeDrawingService
     /// <summary>
     /// Start a batch ready for shape drawing
     /// </summary>
-    /// <param name="cameraTransformationMatrix"></param>
-    /// <param name="customShader"></param>
+    /// <param name="cameraTransformationMatrix">The transform matrix to use from a camera (optional).</param>
+    /// <param name="customShader">A custom effect (optional).</param>
     public void BeginBatch(Matrix? cameraTransformationMatrix = null, Effect? customShader = null)
     {
         // Set/save the transformation matrix
@@ -36,18 +36,26 @@ internal class ShapeDrawingService
     }
 
     /// <summary>
-    /// Draw a filled quad
+    /// Draw a filled quad, will use the custom shader if one has been set, otherwise it will use 
+    /// BasicEffect. The quad is drawn as 2 triangles, so the vertices are ordered in a way to make 
+    /// sure the triangles are wound correctly for backface culling (even though we have backface 
+    /// culling turned off, it's still good practice to wind the triangles correctly).
     /// </summary>
-    /// <param name="colour"></param>
-    /// <param name="topLeftX"></param>
-    /// <param name="topLeftY"></param>
-    /// <param name="topRightX"></param>
-    /// <param name="topRightY"></param>
-    /// <param name="bottomRightX"></param>
-    /// <param name="bottomRightY"></param>
-    /// <param name="bottomLeftX"></param>
-    /// <param name="bottomLeftY"></param>
-    public void DrawFilledQuadrilateral(Color colour, int topLeftX, int topLeftY, int topRightX, int topRightY, int bottomRightX, int bottomRightY, int bottomLeftX, int bottomLeftY)
+    /// <param name="colour">The colour to use to draw the quad.</param>
+    /// <param name="topLeftX">The top left most X position of the quad.</param>
+    /// <param name="topLeftY">The top left most Y position of the quad.</param>
+    /// <param name="topRightX">The top right most X position of the quad.</param>
+    /// <param name="topRightY">The top right most Y position of the quad.</param>
+    /// <param name="bottomRightX">The bottom right most X position of the quad.</param>
+    /// <param name="bottomRightY">The bottom right most Y position of the quad.</param>
+    /// <param name="bottomLeftX">The bottom left most X position of the quad.</param>
+    /// <param name="bottomLeftY">The bottom left most Y position of the quad.</param>
+    public void DrawFilledQuadrilateral(
+        Color colour,
+        int topLeftX, int topLeftY,
+        int topRightX, int topRightY,
+        int bottomRightX, int bottomRightY,
+        int bottomLeftX, int bottomLeftY)
     {
         // Coordinates
         var vertices = new VertexPositionColor[6];
@@ -113,11 +121,12 @@ internal class ShapeDrawingService
     }
 
     /// <summary>
-    /// Draw a line
+    /// Draw a simple line. Will use the custom shader if one has been set, otherwise it 
+    /// will use BasicEffect. The line is drawn as a single line primitive.
     /// </summary>
-    /// <param name="start"></param>
-    /// <param name="end"></param>
-    /// <param name="colour"></param>
+    /// <param name="start">The starting position of the line.</param>
+    /// <param name="end">The ending position of the line.</param>
+    /// <param name="colour">The colour to use when drawing the line.</param>
     public void DrawLine(Vector2 start, Vector2 end, Color colour)
     {
         // Coordinates
@@ -140,7 +149,7 @@ internal class ShapeDrawingService
     }
 
     /// <summary>
-    /// End shape drawing batch (resets transformation matrix and any custom shader
+    /// End shape drawing batch, resets transformation matrix and any custom shader
     /// </summary>
     public void EndBatch()
     {
@@ -151,20 +160,20 @@ internal class ShapeDrawingService
     /// <summary>
     /// Set a custom shader to be used, passing NULL will reset the shader
     /// </summary>
-    /// <param name="shader"></param>
-    public void SetCustomShader(Effect? shader)
+    /// <param name="customShader">Custom effect shader to use (optional).</param>
+    public void SetCustomShader(Effect? customShader)
     {
-        if (shader is null) UseDefaultShader();
-        else UseCustomShader(shader);
+        if (customShader is null) UseDefaultShader();
+        else UseCustomShader(customShader);
     }
 
     /// <summary>
     /// Sets up the service to use the specified shader
     /// </summary>
-    /// <param name="shader"></param>
-    private void UseCustomShader(Effect shader)
+    /// <param name="customShader">Custom effect shader to use.</param>
+    private void UseCustomShader(Effect customShader)
     {
-        _customShader = shader;
+        _customShader = customShader;
 
         var cameraUp = Vector3.Transform(Vector3.Down, Matrix.CreateRotationZ(0));
         var world = _cameraTransformationMatrix is null ? Matrix.Identity : (Matrix)_cameraTransformationMatrix;

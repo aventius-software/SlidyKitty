@@ -44,7 +44,7 @@ internal class MapSystem : UpdateSystem, IDrawSystem
         // pattern instead of just having a flat coloured terrain
         _terrainShader = _contentManager.Load<Effect>("Shaders/terrain shader");
 
-        // Create some hills to start with, we will add more as
+        // Create some initial hills to start with, we will add more as
         // the game goes on in the update method
         _hills = _hillService.CreateHills(
             startingPosition: Vector2.Zero,
@@ -69,9 +69,9 @@ internal class MapSystem : UpdateSystem, IDrawSystem
             {
                 // Yes, ok, first remove the hill from the hill service
                 // so it can dispose of any resources correctly (i.e. physics)
-                _hillService.DeleteHill(_hills[hill]);
+                _hillService.RemoveHillPhysicsBody(_hills[hill]);
 
-                // Next, remove from our list of hills so it's no longer drawn
+                // Next, remove the hill from our list of hills so it's no longer drawn
                 _hills.RemoveAt(hill);
 
                 // Finally, add a new hill to the end of the list
@@ -83,7 +83,8 @@ internal class MapSystem : UpdateSystem, IDrawSystem
                     numberOfSegments: _numberOfSegmentsPerHill,
                     segmentWidth: _segmentWidth,
                     steepness: _random.Next(_minSteepness, _maxSteepness),
-                    height: _hillHeight);
+                    height: _hillHeight,
+                    startingAngle: lastHill.EndAngle);
 
                 _hills.Add(newHill);
             }
