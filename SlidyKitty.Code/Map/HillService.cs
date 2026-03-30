@@ -21,7 +21,7 @@ internal class HillService
         _shapeDrawingService = shapeDrawingService;
     }
 
-    public Hill CreateHill(Vector2 position, int numberOfSegments, int segmentWidth, int steepness, int height)
+    public Hill CreateHill(Vector2 position, int numberOfSegments, int segmentWidth, int steepness, int height, float startingAngle = 0f)
     {
         // Reserve an array to store the hill segment
         var hillSegments = new HillSegment[numberOfSegments];
@@ -31,7 +31,7 @@ internal class HillService
         var segmentY = position.Y;
 
         // Per hill we gradually increase our angle per segment to cover full 360 degrees
-        var angleIncrement = MathHelper.ToRadians(360 / numberOfSegments);
+        var angleIncrement = MathHelper.ToRadians(360f / numberOfSegments);
 
         // Now, generate requested number of segments for this hill
         for (var segmentIndex = 0; segmentIndex < numberOfSegments; segmentIndex++)
@@ -46,7 +46,10 @@ internal class HillService
 
             // Now calculate the position of the end of the segment
             segmentX += segmentWidth;
-            var offsetY = MathF.Sin(segmentIndex * angleIncrement) * steepness;
+
+            // Use the starting angle so consecutive hills continue the curve smoothly
+            var angle = startingAngle + segmentIndex * angleIncrement;
+            var offsetY = MathF.Sin(angle) * steepness;
             var segmentEndPosition = new Vector2(segmentX, segmentY + offsetY);
 
             // Create a physics body for this segment and attach an 'edge' (just a 'line' effectively)
@@ -66,8 +69,14 @@ internal class HillService
             };
         }
 
+        // Compute the end angle based on the final segment slope so the next hill can continue from it
+        var last = hillSegments[numberOfSegments - 1];
+        var delta = last.End - last.Start;
+        var endAngle = MathF.Atan2(delta.Y, delta.X);
+
         return new Hill
         {
+            EndAngle = endAngle,
             Height = height,
             Segments = hillSegments
         };
@@ -93,13 +102,14 @@ internal class HillService
                 numberOfSegments: numberOfSegmentsPerHill,
                 segmentWidth: segmentWidth,
                 steepness: r.Next(minSteepness, maxSteepness),
-                height: height);
+                height: height,
+                startingAngle: hills.Count > 0 ? hills[^1].EndAngle : 0f);
 
             hills.Add(hill);
             position = hills[^1].Segments[^1].End;
         }
 
-        return [.. hills];
+        return hills;
     }
 
     public void DeleteHill(Hill hill)

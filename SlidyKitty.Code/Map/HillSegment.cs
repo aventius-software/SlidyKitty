@@ -5,7 +5,6 @@ namespace SlidyKitty.Code.Map;
 
 internal struct HillSegment
 {
-    public Body Body;
-    public float OffsetY;
+    public Body Body;    
     public Vector2 Start, End;    
 }

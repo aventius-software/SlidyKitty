@@ -12,10 +12,10 @@ namespace SlidyKitty.Code.Map;
 internal class MapSystem : UpdateSystem, IDrawSystem
 {
     private const int _hillHeight = 1000;
-    private const int _maxSteepness = 25;
-    private const int _minSteepness = -25;
-    private const int _numberOfSegmentsPerHill = 32;
-    private const int _segmentWidth = 16;
+    private const int _maxSteepness = 35;
+    private const int _minSteepness = -35;
+    private const int _numberOfSegmentsPerHill = 36;
+    private const int _segmentWidth = 32;
 
     private readonly OrthographicCamera _camera;
     private readonly ContentManager _contentManager;
