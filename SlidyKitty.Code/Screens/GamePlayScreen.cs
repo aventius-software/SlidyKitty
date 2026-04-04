@@ -13,37 +13,49 @@ namespace SlidyKitty.Code.Screens;
 internal class GamePlayScreen : Screen
 {
     private readonly CameraSystem _cameraSystem;
-    private readonly MapSystem _mapSystem;
+    private readonly EntityPositioningSystem _entityPositioningSystem;
+    private readonly HillDrawSystem _hillDrawSystem;
+    private readonly HillUpdateSystem _hillUpdateSystem;    
+    private readonly OriginShiftSystem _originShiftSystem;
     private readonly PauseScreen _pauseScreen;
-    private readonly PhysicsService _physicsService;
-    private readonly PhysicsSystem _physicsSystem;
+    private readonly PhysicsService _physicsService;    
     private readonly PlayerControlSystem _playerControlSystem;
+    private readonly PlayerPhysicsSystem _playerPhysicsSystem;
     private readonly PlayerSpawnSystem _playerSpawnSystem;
     private readonly ScreenManager _screenManager;
     private readonly SpriteDrawingSystem _spriteDrawingSystem;
+    private readonly WorldPhysicsSystem _worldPhysicsSystem;
 
     private World? _world;
 
     public GamePlayScreen(
-        CameraSystem cameraSystem,        
-        MapSystem mapSystem,
+        CameraSystem cameraSystem,
+        EntityPositioningSystem entityPositioningSystem,
+        HillDrawSystem hillDrawSystem,
+        HillUpdateSystem hillUpdateSystem,        
+        OriginShiftSystem originShiftSystem,
         PauseScreen pauseScreen,
-        PhysicsService physicsService,
-        PhysicsSystem physicsSystem,
+        PhysicsService physicsService,        
         PlayerControlSystem playerControlSystem,
+        PlayerPhysicsSystem playerPhysicsSystem,
         PlayerSpawnSystem playerSpawnSystem,
         ScreenManager screenManager,
-        SpriteDrawingSystem spriteDrawingSystem)
+        SpriteDrawingSystem spriteDrawingSystem,
+        WorldPhysicsSystem worldPhysicsSystem)
     {
         _cameraSystem = cameraSystem;
-        _mapSystem = mapSystem;
+        _entityPositioningSystem = entityPositioningSystem;
+        _hillDrawSystem = hillDrawSystem;
+        _hillUpdateSystem = hillUpdateSystem;        
+        _originShiftSystem = originShiftSystem;
         _pauseScreen = pauseScreen;
-        _physicsService = physicsService;
-        _physicsSystem = physicsSystem;
+        _physicsService = physicsService;        
         _playerControlSystem = playerControlSystem;
+        _playerPhysicsSystem = playerPhysicsSystem;
         _playerSpawnSystem = playerSpawnSystem;
         _screenManager = screenManager;
         _spriteDrawingSystem = spriteDrawingSystem;
+        _worldPhysicsSystem = worldPhysicsSystem;
     }
 
     public override void Draw(GameTime gameTime) => _world?.Draw(gameTime);
@@ -53,10 +65,16 @@ internal class GamePlayScreen : Screen
         // Add systems        
         _world = new WorldBuilder()
 
-            // Add the physics system first so it can initialise the physics world
-            // and so that it updates the physics world before any other systems need to use it
-            .AddSystem(_physicsSystem)
-            .AddSystem(_mapSystem)
+            // Add our main game systems
+            .AddSystem(_cameraSystem)
+            .AddSystem(_originShiftSystem)
+
+            .AddSystem(_worldPhysicsSystem)
+            .AddSystem(_playerPhysicsSystem)
+            .AddSystem(_entityPositioningSystem)            
+
+            .AddSystem(_hillUpdateSystem)
+            .AddSystem(_hillDrawSystem)
 
             // Add various initialisation systems, these will run once            
             .AddSystem(_playerSpawnSystem)
@@ -65,10 +83,7 @@ internal class GamePlayScreen : Screen
             .AddSystem(_playerControlSystem)
 
             // Add sprite drawing system last so it draws everything else on top of the map and player
-            .AddSystem(_spriteDrawingSystem)
-
-            // Add the camera system
-            .AddSystem(_cameraSystem)
+            .AddSystem(_spriteDrawingSystem)            
 
             // Build the ECS world ;-)
             .Build();

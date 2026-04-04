@@ -1,19 +1,10 @@
-﻿using Microsoft.Xna.Framework;
-using nkast.Aether.Physics2D.Dynamics;
-
-namespace SlidyKitty.Code.Map;
+﻿namespace SlidyKitty.Code.Map;
 
 internal struct HillSegment
 {
     /// <summary>
-    /// The physics body for this segment, this is used to check for collisions 
-    /// with the player and other physics objects
+    /// The start and end Y offset of this segment, these are relative to the 
+    /// position of the hill's transform component.
     /// </summary>
-    public Body Body;
-
-    /// <summary>
-    /// The start and end position of this segment, this is used to draw the segment 
-    /// and also to determine if the segment has gone off the left of the camera
-    /// </summary>
-    public Vector2 Start, End;
+    public float StartYOffset, EndYOffset;
 }

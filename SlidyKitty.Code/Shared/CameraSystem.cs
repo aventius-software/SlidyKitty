@@ -9,9 +9,8 @@ namespace SlidyKitty.Code.Shared;
 
 internal class CameraSystem : EntityProcessingSystem
 {
-    private readonly OrthographicCamera _camera;
+    private readonly OrthographicCamera _camera;    
 
-    private Vector2 _positionToTrack;
     private ComponentMapper<RigidBodyComponent> _rigidBodyMapper = default!;
     private ComponentMapper<Transform2> _transformMapper = default!;
 
@@ -20,7 +19,7 @@ internal class CameraSystem : EntityProcessingSystem
         typeof(RigidBodyComponent),
         typeof(Transform2)))
     {
-        _camera = camera;
+        _camera = camera;        
     }
 
     public override void Initialize(IComponentMapperService mapperService)
@@ -32,9 +31,6 @@ internal class CameraSystem : EntityProcessingSystem
         // Set zoom limits just in case
         _camera.MinimumZoom = 0.5f; // Restrict zoom out to 50%
         _camera.MaximumZoom = 2f;   // Restrict zoom in to 200%
-
-        // Initialize the position to track to the camera's current position
-        _positionToTrack = _camera.Position;
     }
 
     public override void Process(GameTime gameTime, int entityId)
@@ -42,13 +38,7 @@ internal class CameraSystem : EntityProcessingSystem
         // Get the components for the player entity
         var rigidBodyComponent = _rigidBodyMapper.Get(entityId);
         var transformComponent = _transformMapper.Get(entityId);
-
-        // Interpolate the camera position for smooth movement between position
-        // changes, using a simple linear interpolation (lerp). This gives us a
-        // kind of an acceleration/deccelaration effect for the camera movement
-        // as it tracks towards the players position.        
-        _positionToTrack = Vector2.Lerp(_positionToTrack, transformComponent.Position, 0.25f);
-
+        
         // Update camera position to follow player
         _camera.LookAt(transformComponent.Position);
 

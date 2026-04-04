@@ -102,7 +102,7 @@ public class GameMain : Game
         // Add core game services
         services.AddSingleton<PhysicsService>();
         services.AddSingleton<ShapeDrawingService>();
-        services.AddSingleton<HillService>();
+        services.AddSingleton<HillFactory>();
 
         // Add our ECS world        
         services.AddSingleton<WorldBuilder>();

@@ -25,6 +25,13 @@ internal class SpriteDrawingSystem : EntityDrawSystem
 
     public override void Draw(GameTime gameTime)
     {
+        // Start the sprite batch with the camera's view matrix, so that everything we
+        // draw is transformed according to the camera position and zoom. We also set
+        // the sampler state to PointClamp, which means that when we draw sprites at a
+        // larger size than their original texture size, they will be drawn with a
+        // pixelated look instead of being blurred. This is important for our pixel
+        // art style! We don't need to set the blend state, depth stencil state or
+        // rasterizer state for our simple 2D game, so we can just leave those as null.
         _spriteBatch.Begin(
             sortMode: SpriteSortMode.Immediate,
             blendState: null,

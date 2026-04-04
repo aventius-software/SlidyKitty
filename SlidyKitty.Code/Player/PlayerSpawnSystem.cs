@@ -43,11 +43,17 @@ internal class PlayerSpawnSystem : EntitySystem
         var spriteComponent = entity.Get<SpriteComponent>();
         spriteComponent.Sprite = spriteAtlas.CreateSprite("kitty/001");
 
+        // Set the position
+        var transformComponent = entity.Get<Transform2>();
+        transformComponent.Position = new Vector2(150, -150);
+
         // Create the physics body for the player
-        var body = _physicsService.World.CreateBody(new Vector2(0, -5), 0, BodyType.Dynamic);
+        var body = _physicsService.World.CreateBody(_physicsService.ToSimUnits(transformComponent.Position), 0, BodyType.Dynamic);
         body.Mass = 1f;
         body.FixedRotation = true;
 
+        // We'll approximate the player character with a circle collider, using the width of the
+        // sprite as the diameter. Not totally accurate, but good enough for a simple simulation.
         _ = body.CreateCircle(
             radius: _physicsService.ToSimUnits(spriteComponent.Sprite.Size.X / 2),            
             density: 1f,
