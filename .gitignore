@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/SlidyKitty.Code/pipeline-references/MonoGame.Extended.Content.Pipeline.dll
+/SlidyKitty.Code/pipeline-references/MonoGame.Extended.dll

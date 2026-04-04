@@ -1,0 +1,61 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0-android36</TargetFramework>
+		<SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
+		<OutputType>Exe</OutputType>
+		<ApplicationId>uk.co.aventius.SlidyKitty.Android</ApplicationId>
+		<ApplicationVersion>1</ApplicationVersion>
+		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<AssemblyName>SlidyKitty</AssemblyName>
+	</PropertyGroup>
+	<!-- 
+	When we're in DEBUG mode, we don't want to do things like AOT etc... 
+	-->
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<IsTrimmable>False</IsTrimmable>
+		<IsAotCompatible>False</IsAotCompatible>
+		<AndroidKeyStore>False</AndroidKeyStore>
+		<RunAOTCompilation>False</RunAOTCompilation>
+	</PropertyGroup>
+	<!-- 
+	When we're in RELEASE mode, we DO want to do things like AOT etc... 
+	-->
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<IsTrimmable>True</IsTrimmable>
+		<IsAotCompatible>True</IsAotCompatible>
+		<AndroidKeyStore>False</AndroidKeyStore>
+		<RunAOTCompilation>True</RunAOTCompilation>
+	</PropertyGroup>
+	<!-- 
+	When we're in DEBUG mode, use the debug specific manifest file 
+	-->
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<AndroidManifest>Configurations\Debug\AndroidManifest.xml</AndroidManifest>
+	</PropertyGroup>
+	<!-- 
+	When we're in RELEASE mode, we want to use a release specific manifest file 
+	-->
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<AndroidManifest>Configurations\Release\AndroidManifest.xml</AndroidManifest>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.4.1" />
+		<PackageReference Include="MonoGame.Framework.Android" Version="3.8.4.1" />
+		<PackageReference Include="Xamarin.GooglePlayServices.Ads.Lite" Version="124.0.0.5" />
+	</ItemGroup>	
+	<!--
+	Reference the Android specific content file
+	-->
+	<ItemGroup>
+		<MonoGameContentReference Include="..\SlidyKitty.Code\Content\Content.Android.mgcb">
+			<Link>Content\Content.Android.mgcb</Link>
+		</MonoGameContentReference>
+	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\SlidyKitty.Code\SlidyKitty.Code.csproj" />
+	</ItemGroup>
+	<!--<Target Name="RestoreDotnetTools" BeforeTargets="CollectPackageReferences">
+		<Message Text="Restoring dotnet tools (this might take a while depending on your internet speed and should only happen upon building your project for the first time, or after upgrading MonoGame, or clearing your nuget cache)" Importance="High" />
+		<Exec Command="dotnet tool restore" />
+	</Target>-->
+</Project>
