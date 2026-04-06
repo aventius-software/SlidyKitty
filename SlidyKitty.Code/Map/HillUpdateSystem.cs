@@ -12,8 +12,8 @@ internal class HillUpdateSystem : EntityUpdateSystem
     private const int _hillHeight = 1000;
     private const int _maxSteepness = 35;
     private const int _minSteepness = -35;
-    private const int _numberOfSegmentsPerHill = 36;
-    private const int _segmentWidth = 32;
+    private const int _numberOfSegmentsPerHill = 64;
+    private const int _segmentWidth = 16;
 
     private readonly OrthographicCamera _camera;
     private readonly HillFactory _hillFactory;

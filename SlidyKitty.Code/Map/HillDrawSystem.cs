@@ -11,18 +11,24 @@ internal class HillDrawSystem : EntityDrawSystem
 {
     private readonly OrthographicCamera _camera;
     private readonly ContentManager _contentManager;
+    private readonly GraphicsDevice _graphicsDevice;
     private readonly ShapeDrawingService _shapeDrawingService;
 
     private ComponentMapper<HillComponent> _hillMapper = default!;
-    private Effect? _terrainShader;
+    private Effect _terrainShader = default!;
     private ComponentMapper<Transform2> _transformMapper = default!;
 
-    public HillDrawSystem(OrthographicCamera camera, ContentManager contentManager, ShapeDrawingService shapeDrawingService) : base(Aspect.All(
+    public HillDrawSystem(
+        OrthographicCamera camera,
+        ContentManager contentManager,
+        GraphicsDevice graphicsDevice,
+        ShapeDrawingService shapeDrawingService) : base(Aspect.All(
         typeof(HillComponent),
         typeof(Transform2)))
     {
         _camera = camera;
         _contentManager = contentManager;
+        _graphicsDevice = graphicsDevice;
         _shapeDrawingService = shapeDrawingService;
     }
 
@@ -34,11 +40,14 @@ internal class HillDrawSystem : EntityDrawSystem
 
         // Load our custom terrain shader which we will use when drawing nice
         // patterns on the terrain quads for our hills.
-        //_terrainShader = _contentManager.Load<Effect>("Shaders/terrain shader");
+        _terrainShader = _contentManager.Load<Effect>("Shaders/dirt and grass");
     }
 
     public override void Draw(GameTime gameTime)
     {
+        // Configure the shader before each draw run so that it has the latest camera position
+        ConfigureShader();
+
         foreach (var entityId in ActiveEntities)
         {
             // Get our entities components
@@ -46,8 +55,22 @@ internal class HillDrawSystem : EntityDrawSystem
             var transformComponent = _transformMapper.Get(entityId);
 
             // Draw this hill
-            DrawHill(hillComponent, transformComponent, _terrainShader);
+            DrawHill(hillComponent, transformComponent);
         }
+    }
+
+    private void ConfigureShader()
+    {
+        // Set the view and projection matrices on the shader. The view matrix is based on the
+        // camera's position and orientation, and the projection matrix is an orthographic
+        // projection based on the viewport size. We multiply these together to get a combined
+        // view-projection matrix which we can use in our shader to transform our terrain
+        // vertices from world space into screen space.
+        var view = _camera.GetViewMatrix();
+        var projection = Matrix.CreateOrthographicOffCenter(0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 0, 0, 1);
+
+        _terrainShader.Parameters["ViewProjection"].SetValue(view * projection);
+        _terrainShader.Parameters["Scale"].SetValue(0.05f);
     }
 
     /// <summary>
@@ -62,9 +85,9 @@ internal class HillDrawSystem : EntityDrawSystem
     /// position will be (100 + segmentWidth, 260), and so on for each segment of the hill.
     /// </summary>
     /// <param name="hill">The hill to draw</param>
-    /// <param name="transform">The transform component of the hill's entity (used to determine the starting position of the hill)</param>
-    /// <param name="terrainShader">An optional custom shader to use when drawing the terrain quads (if null then no shader is used and the terrain will just be drawn as a flat coloured quad)</param>
-    private void DrawHill(HillComponent hill, Transform2 transform, Effect? terrainShader = null)
+    /// <param name="transform">The transform component of the hill's entity (used to determine 
+    /// the starting position of the hill)</param>
+    private void DrawHill(HillComponent hill, Transform2 transform)
     {
         // The starting position of the hill is determined by the position of the entity's transform
         // component. The hill segments are drawn relative to this starting position. So if the transform
@@ -72,9 +95,6 @@ internal class HillDrawSystem : EntityDrawSystem
         // of that segment will be (100, 250). If the second segment has a startY of 60, then its start
         // position will be (100 + segmentWidth, 260), and so on for each segment of the hill.
         var hillPosition = transform.Position;
-
-        // Start the shape drawing batch using current camera view matrix
-        _shapeDrawingService.BeginBatch(_camera.GetViewMatrix());
 
         // Now draw each segment of the hill as a filled quadrilateral (for
         // the terrain) and a line (for the ground)
@@ -95,28 +115,16 @@ internal class HillDrawSystem : EntityDrawSystem
             var endingRelativeOffset = new Vector2(endingRelativeOffsetX, endingRelativeOffsetY);
             var segmentEndPosition = hillPosition + endingRelativeOffset;
 
-            // Set shader when drawing terrain quad
-            _shapeDrawingService.SetCustomShader(terrainShader);
-
             // Draw this terrain 'segment' which will be affected by our terrain shader. Ideall, the
             // shader should 'draw' some kind pattern on the terrain to make the terrain more interesting
             // than just a flat colour. If no shader is used then this will just draw a simple flat
             // coloured quad...
-            _shapeDrawingService.DrawFilledQuadrilateral(
-                colour: new Color(0, 0, 255, 255),
-                topLeftX: (int)segmentStartPosition.X, topLeftY: (int)segmentStartPosition.Y,
-                topRightX: (int)segmentEndPosition.X, topRightY: (int)segmentEndPosition.Y,
-                bottomRightX: (int)segmentEndPosition.X, bottomRightY: hill.Height,
-                bottomLeftX: (int)segmentStartPosition.X, bottomLeftY: hill.Height);
-
-            // Disable any custom terrain shader as we don't want it to affect the ground line that we draw next
-            _shapeDrawingService.SetCustomShader(null);
-
-            // Draw ground line (no shader applied to this so it will just be a flat coloured line)
-            _shapeDrawingService.DrawLine(segmentStartPosition, segmentEndPosition, Color.White);
+            _shapeDrawingService.DrawQuadrilateral(
+                _terrainShader,
+                x0: (int)segmentStartPosition.X, y0: (int)segmentStartPosition.Y,
+                x1: (int)segmentEndPosition.X, y1: (int)segmentEndPosition.Y,
+                x2: (int)segmentEndPosition.X, y2: hill.Height,
+                x3: (int)segmentStartPosition.X, y3: hill.Height);            
         }
-
-        // Done drawing shapes
-        _shapeDrawingService.EndBatch();
     }
 }

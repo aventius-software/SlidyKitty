@@ -8,26 +8,26 @@ namespace SlidyKitty.Code.Shared;
 
 internal class OriginShiftSystem : EntityUpdateSystem
 {
-    private const float Threshold = 1000f;
+    private const float Threshold = 500f;
 
     private readonly OrthographicCamera _camera;
+    private readonly OriginShiftService _originShiftService;
     private readonly PhysicsService _physicsService;
 
-    private ComponentMapper<RigidBodyComponent> _rigidBodyMapper = default!;
-    private ComponentMapper<Transform2> _transformMapper = default!;
+    private ComponentMapper<RigidBodyComponent> _rigidBodyMapper = default!;    
 
-    public OriginShiftSystem(OrthographicCamera camera, PhysicsService physicsService) : base(Aspect.All(
+    public OriginShiftSystem(OrthographicCamera camera, OriginShiftService originShiftService, PhysicsService physicsService) : base(Aspect.All(
         typeof(RigidBodyComponent),
         typeof(Transform2)))
     {
         _camera = camera;
+        _originShiftService = originShiftService;
         _physicsService = physicsService;
     }
 
     public override void Initialize(IComponentMapperService mapperService)
     {
-        _rigidBodyMapper = mapperService.GetMapper<RigidBodyComponent>();
-        _transformMapper = mapperService.GetMapper<Transform2>();
+        _rigidBodyMapper = mapperService.GetMapper<RigidBodyComponent>();        
     }
 
     public override void Update(GameTime gameTime)
@@ -43,10 +43,10 @@ internal class OriginShiftSystem : EntityUpdateSystem
         {
             // Calculate how much we need to shift the world back towards the origin
             var offset = new Vector2(-_camera.Position.X, 0);
-
+            
             // Camera back near zero
             _camera.Move(offset);
-
+            
             // Shift everything in the world. Since we're using physics, we need to shift
             // the physics bodies and the transform components separately, otherwise the
             // physics bodies would be in the wrong place compared to the transform components
@@ -59,9 +59,6 @@ internal class OriginShiftSystem : EntityUpdateSystem
             {
                 var rigidBodyComponent = _rigidBodyMapper.Get(entityId);
                 rigidBodyComponent.Body.Position += _physicsService.ToSimUnits(offset);
-
-                var transformComponent = _transformMapper.Get(entityId);
-                transformComponent.Position += offset;
             }
         }
     }

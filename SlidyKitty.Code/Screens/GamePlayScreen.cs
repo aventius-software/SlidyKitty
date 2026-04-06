@@ -65,24 +65,25 @@ internal class GamePlayScreen : Screen
         // Add systems        
         _world = new WorldBuilder()
 
-            // Add our main game systems
+            // Add our camera and origin shift systems
             .AddSystem(_cameraSystem)
             .AddSystem(_originShiftSystem)
 
+            // Add our main game systems
             .AddSystem(_worldPhysicsSystem)
             .AddSystem(_playerPhysicsSystem)
-            .AddSystem(_entityPositioningSystem)            
-
             .AddSystem(_hillUpdateSystem)
-            .AddSystem(_hillDrawSystem)
-
+            .AddSystem(_entityPositioningSystem)            
+                        
             // Add various initialisation systems, these will run once            
             .AddSystem(_playerSpawnSystem)
             
             // Add player control system
             .AddSystem(_playerControlSystem)
 
-            // Add sprite drawing system last so it draws everything else on top of the map and player
+            // Add our drawing systems, add sprite drawing system last so it
+            // draws everything else on top of the background
+            .AddSystem(_hillDrawSystem)
             .AddSystem(_spriteDrawingSystem)            
 
             // Build the ECS world ;-)
