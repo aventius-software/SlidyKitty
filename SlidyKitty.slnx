@@ -1,6 +1,6 @@
 <Solution>
   <Project Path="SlidyKitty.Android/SlidyKitty.Android.csproj">
-    <Build Solution="Debug|*" Project="false" />
+    <Deploy Solution="Debug|*" />
   </Project>
   <Project Path="SlidyKitty.Code/SlidyKitty.Code.csproj" />
   <Project Path="SlidyKitty.Desktop/SlidyKitty.Desktop.csproj" />

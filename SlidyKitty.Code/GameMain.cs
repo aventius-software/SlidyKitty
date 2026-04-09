@@ -25,6 +25,7 @@ namespace SlidyKitty.Code;
 public class GameMain : Game
 {
     // Set the 'virtual' resolution which we'll scale later to whatever screen size
+    private const int _targetFps = 119;
     private const int _virtualResolutionWidth = 1920, _virtualResolutionHeight = 1080;
 
     private readonly GraphicsDeviceManager _graphics;
@@ -42,6 +43,19 @@ public class GameMain : Game
         // Set initial video config
         _graphics.PreferredBackBufferWidth = 1920;
         _graphics.PreferredBackBufferHeight = 1080;
+
+        // Disable the fixed timestep
+        IsFixedTimeStep = true;
+        InactiveSleepTime = TimeSpan.Zero;
+
+        // If we want a different target fps from the default (which in Monogame is 60), then
+        // we need to set the target 'time elapsed' we want for the specified target fps        
+        TargetElapsedTime = TimeSpan.FromTicks((long)(TimeSpan.TicksPerSecond / _targetFps));
+
+        // No vsync
+        _graphics.SynchronizeWithVerticalRetrace = false;
+
+        // Apply changes
         _graphics.ApplyChanges();
 
         // Add the Monogame.Extended screen manager as per normal...

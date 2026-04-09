@@ -8,13 +8,13 @@ namespace SlidyKitty.Code.Shared;
 
 internal class OriginShiftSystem : EntityUpdateSystem
 {
-    private const float Threshold = 500f;
+    private const float Threshold = 1500f;
 
     private readonly OrthographicCamera _camera;
     private readonly OriginShiftService _originShiftService;
     private readonly PhysicsService _physicsService;
 
-    private ComponentMapper<RigidBodyComponent> _rigidBodyMapper = default!;    
+    private ComponentMapper<RigidBodyComponent> _rigidBodyMapper = default!;
 
     public OriginShiftSystem(OrthographicCamera camera, OriginShiftService originShiftService, PhysicsService physicsService) : base(Aspect.All(
         typeof(RigidBodyComponent),
@@ -27,7 +27,7 @@ internal class OriginShiftSystem : EntityUpdateSystem
 
     public override void Initialize(IComponentMapperService mapperService)
     {
-        _rigidBodyMapper = mapperService.GetMapper<RigidBodyComponent>();        
+        _rigidBodyMapper = mapperService.GetMapper<RigidBodyComponent>();
     }
 
     public override void Update(GameTime gameTime)
@@ -39,14 +39,22 @@ internal class OriginShiftSystem : EntityUpdateSystem
         // camera position (and all game objects) would eventually be enormously
         // far from the origin which would or could cause all sorts of weird
         // issues with rendering and physics.
+        _originShiftService.SetShift(new Vector2(Threshold, 0));
+
         if (_camera.Position.X > Threshold)
         {
-            // Calculate how much we need to shift the world back towards the origin
-            var offset = new Vector2(-_camera.Position.X, 0);
-            
-            // Camera back near zero
+            // Move the camera back towards the origin by the threshold amount. We're not bothered
+            // by the camera being a bit off from the origin, we just want to make sure it doesn't get
+            // too far away. So we can just move it back by the threshold amount, which will keep it
+            // within a reasonable distance from the origin. This is also key for the terrain shader
+            // to work correctly, as it uses the shift value to calculate how to repeat the noise
+            // texture across the terrain. Essentially our terrain shader needs to  repeat the noise texture
+            // every 'threshold' units across the terrain to look nice and not 'jump' whenever a shift happens
+            var offset = new Vector2(-Threshold, 0);
+
+            // Camera back nearer to zero
             _camera.Move(offset);
-            
+
             // Shift everything in the world. Since we're using physics, we need to shift
             // the physics bodies and the transform components separately, otherwise the
             // physics bodies would be in the wrong place compared to the transform components

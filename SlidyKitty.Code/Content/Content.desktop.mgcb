@@ -43,8 +43,8 @@
 /processorParam:TextureFormat=Color
 /build:Logos/Aventius.png
 
-#begin Shaders/dirt and grass.fx
+#begin Shaders/terrain - dirty.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Shaders/dirt and grass.fx
+/build:Shaders/terrain - dirty.fx

@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended;
 using MonoGame.Extended.ECS;
 using MonoGame.Extended.ECS.Systems;
+using SlidyKitty.Code.Shared;
 
 namespace SlidyKitty.Code.Map;
 
@@ -12,6 +13,7 @@ internal class HillDrawSystem : EntityDrawSystem
     private readonly OrthographicCamera _camera;
     private readonly ContentManager _contentManager;
     private readonly GraphicsDevice _graphicsDevice;
+    private readonly OriginShiftService _originShiftService;
     private readonly ShapeDrawingService _shapeDrawingService;
 
     private ComponentMapper<HillComponent> _hillMapper = default!;
@@ -22,6 +24,7 @@ internal class HillDrawSystem : EntityDrawSystem
         OrthographicCamera camera,
         ContentManager contentManager,
         GraphicsDevice graphicsDevice,
+        OriginShiftService originShiftService,
         ShapeDrawingService shapeDrawingService) : base(Aspect.All(
         typeof(HillComponent),
         typeof(Transform2)))
@@ -29,6 +32,7 @@ internal class HillDrawSystem : EntityDrawSystem
         _camera = camera;
         _contentManager = contentManager;
         _graphicsDevice = graphicsDevice;
+        _originShiftService = originShiftService;
         _shapeDrawingService = shapeDrawingService;
     }
 
@@ -40,7 +44,7 @@ internal class HillDrawSystem : EntityDrawSystem
 
         // Load our custom terrain shader which we will use when drawing nice
         // patterns on the terrain quads for our hills.
-        _terrainShader = _contentManager.Load<Effect>("Shaders/dirt and grass");
+        _terrainShader = _contentManager.Load<Effect>("Shaders/terrain - dirty");
     }
 
     public override void Draw(GameTime gameTime)
@@ -69,8 +73,32 @@ internal class HillDrawSystem : EntityDrawSystem
         var view = _camera.GetViewMatrix();
         var projection = Matrix.CreateOrthographicOffCenter(0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 0, 0, 1);
 
+        // So that the shader knows about the camera's position and orientation, we give
+        // the combined view-projection matrix to the shader.
         _terrainShader.Parameters["ViewProjection"].SetValue(view * projection);
-        _terrainShader.Parameters["Scale"].SetValue(0.05f);
+
+        // As we're using an origin shift technique to keep world/camera positions limited (otherwise
+        // they'd grow enormous for an infinite world eventually causing all sorts of issues), then
+        // we need to make sure that the shader uses a repeating noise texture in the shader to create
+        // patterns on the terrain. So, if we basically have a 'tiled' shader, we need to tell the shader
+        // how wide the terrain is in world units so that it can repeat the noise texture correctly across
+        // the terrain). So we give the shader the shift value (which should always stay the same) as it
+        // will use this to calculate how to repeat the noise texture across the terrain. This is important
+        // to ensure that the noise pattern repeats correctly across the terrain as the camera moves.
+        _terrainShader.Parameters["TileWidth"].SetValue(_originShiftService.Shift.X);
+
+        // The base terrain scale
+        _terrainShader.Parameters["Frequency"].SetValue(6f);
+
+        // Overall height strength
+        _terrainShader.Parameters["Amplitude"].SetValue(0.75f);
+        _terrainShader.Parameters["Octaves"].SetValue(4);
+
+        // Frequency multiplier
+        _terrainShader.Parameters["Lacunarity"].SetValue(2.0f);
+
+        // Amplitude decay
+        _terrainShader.Parameters["Gain"].SetValue(0.5f);
     }
 
     /// <summary>

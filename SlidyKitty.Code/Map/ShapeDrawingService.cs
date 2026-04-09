@@ -4,14 +4,27 @@ using Microsoft.Xna.Framework.Graphics;
 namespace SlidyKitty.Code.Map;
 
 internal class ShapeDrawingService
-{    
+{
     private readonly GraphicsDevice _graphicsDevice;
 
     public ShapeDrawingService(GraphicsDevice graphicsDevice)
-    {        
+    {
         _graphicsDevice = graphicsDevice;
     }
 
+    /// <summary>
+    /// A basic method to draw a quadrilateral using the specified shader effect 
+    /// and coordinates. The quadrilateral is made up of 2 triangles.
+    /// </summary>
+    /// <param name="effect">The shader effect to use</param>
+    /// <param name="x0">Top left position of the quad</param>
+    /// <param name="y0">Top left position of the quad</param>
+    /// <param name="x1">Top right position of the quad</param>
+    /// <param name="y1">Top right position of the quad</param>
+    /// <param name="x2">Bottom right position of the quad</param>
+    /// <param name="y2">Bottom right position of the quad</param>
+    /// <param name="x3">Bottom left position of the quad</param>
+    /// <param name="y3">Bottom left position of the quad</param>
     public void DrawQuadrilateral(Effect effect, int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3)
     {
         // Reserve an array to store the triangle coordinates that of the

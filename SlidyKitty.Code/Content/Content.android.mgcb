@@ -10,8 +10,14 @@
 
 #-------------------------------- References --------------------------------#
 
+/reference:..\pipeline-references\MonoGame.Extended.Content.Pipeline.dll
 
 #---------------------------------- Content ---------------------------------#
+
+#begin Characters/kitty-atlas.json
+/importer:TexturePackerJsonImporter
+/processor:TexturePackerProcessor
+/build:Characters/kitty-atlas.json
 
 #begin Characters/Kitty.png
 /importer:TextureImporter
@@ -37,3 +43,8 @@
 /processorParam:TextureFormat=Color
 /build:Logos/Aventius.png
 
+#begin Shaders/terrain - dirty.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:Shaders/terrain - dirty.fx

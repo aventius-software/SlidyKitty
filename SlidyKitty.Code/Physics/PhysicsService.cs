@@ -16,10 +16,7 @@ public class PhysicsService : IDisposable
     private float _simUnitsToDisplayUnitsRatio = 1 / 100f;
     private World _world;
 
-    public PhysicsService()
-    {
-        _world = CreateWorld();
-    }
+    public PhysicsService() => _world = CreateWorld();
 
     /// <summary>
     /// Resets the physics world by disposing of the existing world and creating a new one. This 
