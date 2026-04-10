@@ -5,6 +5,7 @@ using MonoGame.Extended;
 using MonoGame.Extended.ECS;
 using MonoGame.Extended.ECS.Systems;
 using SlidyKitty.Code.Shared;
+using System;
 
 namespace SlidyKitty.Code.Map;
 
@@ -44,13 +45,17 @@ internal class HillDrawSystem : EntityDrawSystem
 
         // Load our custom terrain shader which we will use when drawing nice
         // patterns on the terrain quads for our hills.
-        _terrainShader = _contentManager.Load<Effect>("Shaders/terrain - dirty");
+        var shader = OperatingSystem.IsAndroid() ? "Shaders/simple" : "Shaders/terrain - dirty";
+        _terrainShader = _contentManager.Load<Effect>(shader);
     }
 
     public override void Draw(GameTime gameTime)
     {
         // Configure the shader before each draw run so that it has the latest camera position
-        ConfigureShader();
+        if (OperatingSystem.IsAndroid())
+            ConfigureAndroidShader();
+        else
+            ConfigureShader();
 
         foreach (var entityId in ActiveEntities)
         {
@@ -99,6 +104,21 @@ internal class HillDrawSystem : EntityDrawSystem
 
         // Amplitude decay
         _terrainShader.Parameters["Gain"].SetValue(0.5f);
+    }
+
+    private void ConfigureAndroidShader()
+    {
+        // Set the view and projection matrices on the shader. The view matrix is based on the
+        // camera's position and orientation, and the projection matrix is an orthographic
+        // projection based on the viewport size. We multiply these together to get a combined
+        // view-projection matrix which we can use in our shader to transform our terrain
+        // vertices from world space into screen space.
+        var view = _camera.GetViewMatrix();
+        var projection = Matrix.CreateOrthographicOffCenter(0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 0, 0, 1);
+
+        // So that the shader knows about the camera's position and orientation, we give
+        // the combined view-projection matrix to the shader.
+        _terrainShader.Parameters["ViewProjection"].SetValue(view * projection);
     }
 
     /// <summary>
@@ -152,7 +172,7 @@ internal class HillDrawSystem : EntityDrawSystem
                 x0: (int)segmentStartPosition.X, y0: (int)segmentStartPosition.Y,
                 x1: (int)segmentEndPosition.X, y1: (int)segmentEndPosition.Y,
                 x2: (int)segmentEndPosition.X, y2: hill.Height,
-                x3: (int)segmentStartPosition.X, y3: hill.Height);            
+                x3: (int)segmentStartPosition.X, y3: hill.Height);
         }
     }
 }

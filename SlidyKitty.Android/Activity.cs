@@ -49,11 +49,15 @@ namespace SlidyKitty.Android
 
             SetContentView(mainLayout);
 
-            // Create the ad view, load an ad and add it to the container
+            // Create the ad view, load an ad and add it to the container. This is just AdMob's TEST ad unit for
+            // for demonstration purposes, you'll need to sign up to AdMob and create your own ad unit to show real
+            // ads in your app (which can be a nightmare just trying to get an account). Also note that you'll need
+            // to use these in the 'AndroidManifest.xml' files (see the 'Configurations' folder). For more infor, see
+            // the links below:
+            // https://developers.google.com/admob/android/test-ads#sample_ad_units
+            // https://developers.google.com/admob/android/quick-start#import_the_mobile_ads_sdk
             var bannerAd = new AdView(this)
-            {
-                // This is AdMob's test unit id, for more information see this
-                // link https://developers.google.com/admob/android/test-ads 
+            {               
                 AdUnitId = "ca-app-pub-3940256099942544/9214589741",
                 AdSize = AdSize.Banner
             };

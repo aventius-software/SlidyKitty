@@ -44,7 +44,7 @@ public class GameMain : Game
         _graphics.PreferredBackBufferWidth = 1920;
         _graphics.PreferredBackBufferHeight = 1080;
 
-        // Disable the fixed timestep
+        // Set fixed timestep
         IsFixedTimeStep = true;
         InactiveSleepTime = TimeSpan.Zero;
 
@@ -94,7 +94,7 @@ public class GameMain : Game
         services.AddSingleton<CustomRenderTarget>(options =>
         {
             var service = new CustomRenderTarget(GraphicsDevice, options.GetRequiredService<SpriteBatch>());
-            service.InitialiseRenderDestination(_virtualResolutionWidth, _virtualResolutionHeight);
+            service.InitialiseRenderDestination(_virtualResolutionWidth, _virtualResolutionHeight);            
 
             return service;
         });
