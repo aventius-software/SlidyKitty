@@ -6,6 +6,7 @@ using Android.Views;
 using Android.Widget;
 using Microsoft.Xna.Framework;
 using SlidyKitty.Code;
+using SlidyKitty.Code.Shared;
 using AndroidGraphics = Android.Graphics;
 
 namespace SlidyKitty.Android
@@ -16,7 +17,7 @@ namespace SlidyKitty.Android
         Icon = "@drawable/icon",
         AlwaysRetainTaskState = true,
         LaunchMode = LaunchMode.SingleInstance,
-        ScreenOrientation = ScreenOrientation.FullUser,
+        ScreenOrientation = ScreenOrientation.UserLandscape,
         ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden | ConfigChanges.ScreenSize
     )]
     public class Activity : AndroidGameActivity
@@ -28,7 +29,12 @@ namespace SlidyKitty.Android
         {            
             base.OnCreate(bundle);
 
-            _game = new GameMain();
+            var gameSettings = new GameSettings
+            {
+                UseCurrentDisplayMode = true
+            };
+
+            _game = new GameMain(gameSettings);
             _view = _game.Services.GetService(typeof(View)) as View;
 
             // A container to show the add at the top of the page            

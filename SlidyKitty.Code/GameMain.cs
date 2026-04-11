@@ -23,34 +23,35 @@ namespace SlidyKitty.Code;
 /// code is open source and available on GitHub at https://github.com/aventius-software/SlidyKitty
 /// </summary>
 public class GameMain : Game
-{
-    // Set the 'virtual' resolution which we'll scale later to whatever screen size
-    private const int _targetFps = 119;
-    private const int _virtualResolutionWidth = 1920, _virtualResolutionHeight = 1080;
-
+{    
+    private readonly GameSettings _gameSettings;
     private readonly GraphicsDeviceManager _graphics;
     private readonly ScreenManager _screenManager;
 
     private CustomRenderTarget _customRenderTarget = default!;
     private IServiceProvider _serviceProvider = default!;
 
-    public GameMain()
+    public GameMain(GameSettings gameSettings)
     {
+        _gameSettings = gameSettings;
+
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
 
-        // Set initial video config
-        _graphics.PreferredBackBufferWidth = 1920;
-        _graphics.PreferredBackBufferHeight = 1080;
-
+        if (!_gameSettings.UseCurrentDisplayMode)
+        {
+            _graphics.PreferredBackBufferWidth = _gameSettings.VirtualResolution.X == 0 ? 1920 : (int)_gameSettings.VirtualResolution.X;
+            _graphics.PreferredBackBufferHeight = _gameSettings.VirtualResolution.Y == 0 ? 1080 : (int)_gameSettings.VirtualResolution.Y;
+        }
+        
         // Set fixed timestep
         IsFixedTimeStep = true;
         InactiveSleepTime = TimeSpan.Zero;
 
         // If we want a different target fps from the default (which in Monogame is 60), then
         // we need to set the target 'time elapsed' we want for the specified target fps        
-        TargetElapsedTime = TimeSpan.FromTicks((long)(TimeSpan.TicksPerSecond / _targetFps));
+        TargetElapsedTime = TimeSpan.FromTicks((long)(TimeSpan.TicksPerSecond / _gameSettings.TargetFps));
 
         // No vsync
         _graphics.SynchronizeWithVerticalRetrace = false;
@@ -94,7 +95,7 @@ public class GameMain : Game
         services.AddSingleton<CustomRenderTarget>(options =>
         {
             var service = new CustomRenderTarget(GraphicsDevice, options.GetRequiredService<SpriteBatch>());
-            service.InitialiseRenderDestination(_virtualResolutionWidth, _virtualResolutionHeight);            
+            service.InitialiseRenderDestination(_graphics.PreferredBackBufferWidth, _graphics.PreferredBackBufferHeight);            
 
             return service;
         });
@@ -107,8 +108,8 @@ public class GameMain : Game
             var viewportAdapter = new BoxingViewportAdapter(
                 Window,
                 GraphicsDevice,
-                _virtualResolutionWidth,
-                _virtualResolutionHeight);
+                _graphics.PreferredBackBufferWidth,
+                _graphics.PreferredBackBufferHeight);
 
             return new OrthographicCamera(viewportAdapter);
         });

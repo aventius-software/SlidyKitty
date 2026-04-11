@@ -43,14 +43,8 @@
 /processorParam:TextureFormat=Color
 /build:Logos/Aventius.png
 
-#begin Shaders/terrain - dirty.fx
+#begin Shaders/terrain - android.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Shaders/terrain - dirty.fx
-
-#begin Shaders/simple.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Shaders/simple.fx
+/build:Shaders/terrain - android.fx

@@ -45,7 +45,7 @@ internal class HillDrawSystem : EntityDrawSystem
 
         // Load our custom terrain shader which we will use when drawing nice
         // patterns on the terrain quads for our hills.
-        var shader = OperatingSystem.IsAndroid() ? "Shaders/simple" : "Shaders/terrain - dirty";
+        var shader = OperatingSystem.IsAndroid() ? "Shaders/terrain - android" : "Shaders/terrain - standard";
         _terrainShader = _contentManager.Load<Effect>(shader);
     }
 
@@ -106,6 +106,18 @@ internal class HillDrawSystem : EntityDrawSystem
         _terrainShader.Parameters["Gain"].SetValue(0.5f);
     }
 
+    /// <summary>
+    /// Android has some limitations around shader complexity and performance, so we 
+    /// use a simpler shader configuration for Android to ensure good performance on 
+    /// mobile devices. This method configures the shader parameters specifically for 
+    /// Android, which may involve using fewer octaves of noise or other optimizations 
+    /// to ensure that the shader runs efficiently on mobile hardware while still 
+    /// providing a visually appealing terrain effect. Might eventually combine this
+    /// with the standard shader configuration method and just have some conditional 
+    /// logic in there to adjust parameters based on the platform, but for now I'll 
+    /// keep it separate for clarity and to make it easier to experiment with 
+    /// different configurations for mobile vs desktop.
+    /// </summary>
     private void ConfigureAndroidShader()
     {
         // Set the view and projection matrices on the shader. The view matrix is based on the
@@ -119,6 +131,28 @@ internal class HillDrawSystem : EntityDrawSystem
         // So that the shader knows about the camera's position and orientation, we give
         // the combined view-projection matrix to the shader.
         _terrainShader.Parameters["ViewProjection"].SetValue(view * projection);
+
+        // As we're using an origin shift technique to keep world/camera positions limited (otherwise
+        // they'd grow enormous for an infinite world eventually causing all sorts of issues), then
+        // we need to make sure that the shader uses a repeating noise texture in the shader to create
+        // patterns on the terrain. So, if we basically have a 'tiled' shader, we need to tell the shader
+        // how wide the terrain is in world units so that it can repeat the noise texture correctly across
+        // the terrain). So we give the shader the shift value (which should always stay the same) as it
+        // will use this to calculate how to repeat the noise texture across the terrain. This is important
+        // to ensure that the noise pattern repeats correctly across the terrain as the camera moves.
+        _terrainShader.Parameters["TileWidth"].SetValue(_originShiftService.Shift.X);
+
+        // The base terrain scale
+        _terrainShader.Parameters["Frequency"].SetValue(6f);
+
+        // Overall height strength
+        _terrainShader.Parameters["Amplitude"].SetValue(0.75f);
+        
+        // Frequency multiplier
+        _terrainShader.Parameters["Lacunarity"].SetValue(2.0f);
+
+        // Amplitude decay
+        _terrainShader.Parameters["Gain"].SetValue(0.5f);
     }
 
     /// <summary>
