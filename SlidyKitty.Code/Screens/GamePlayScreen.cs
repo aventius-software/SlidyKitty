@@ -11,7 +11,7 @@ using SlidyKitty.Code.Shared;
 namespace SlidyKitty.Code.Screens;
 
 internal class GamePlayScreen : Screen
-{
+{    
     private readonly CameraSystem _cameraSystem;
     private readonly EntityPositioningSystem _entityPositioningSystem;
     private readonly HillDrawSystem _hillDrawSystem;
@@ -23,12 +23,13 @@ internal class GamePlayScreen : Screen
     private readonly PlayerPhysicsSystem _playerPhysicsSystem;
     private readonly PlayerSpawnSystem _playerSpawnSystem;
     private readonly ScreenManager _screenManager;
+    private readonly SkyDrawSystem _skyDrawSystem;
     private readonly SpriteDrawingSystem _spriteDrawingSystem;
     private readonly WorldPhysicsSystem _worldPhysicsSystem;
 
     private World? _world;
 
-    public GamePlayScreen(
+    public GamePlayScreen(        
         CameraSystem cameraSystem,
         EntityPositioningSystem entityPositioningSystem,
         HillDrawSystem hillDrawSystem,
@@ -40,9 +41,10 @@ internal class GamePlayScreen : Screen
         PlayerPhysicsSystem playerPhysicsSystem,
         PlayerSpawnSystem playerSpawnSystem,
         ScreenManager screenManager,
+        SkyDrawSystem skyDrawSystem,
         SpriteDrawingSystem spriteDrawingSystem,
         WorldPhysicsSystem worldPhysicsSystem)
-    {
+    {        
         _cameraSystem = cameraSystem;
         _entityPositioningSystem = entityPositioningSystem;
         _hillDrawSystem = hillDrawSystem;
@@ -54,6 +56,7 @@ internal class GamePlayScreen : Screen
         _playerPhysicsSystem = playerPhysicsSystem;
         _playerSpawnSystem = playerSpawnSystem;
         _screenManager = screenManager;
+        _skyDrawSystem = skyDrawSystem;
         _spriteDrawingSystem = spriteDrawingSystem;
         _worldPhysicsSystem = worldPhysicsSystem;
     }
@@ -71,7 +74,7 @@ internal class GamePlayScreen : Screen
 
             // Add our main game systems
             .AddSystem(_worldPhysicsSystem)
-            .AddSystem(_playerPhysicsSystem)
+            .AddSystem(_playerPhysicsSystem)            
             .AddSystem(_hillUpdateSystem)
             .AddSystem(_entityPositioningSystem)            
                         
@@ -83,6 +86,7 @@ internal class GamePlayScreen : Screen
 
             // Add our drawing systems, add sprite drawing system last so it
             // draws everything else on top of the background
+            .AddSystem(_skyDrawSystem)            
             .AddSystem(_hillDrawSystem)
             .AddSystem(_spriteDrawingSystem)            
 

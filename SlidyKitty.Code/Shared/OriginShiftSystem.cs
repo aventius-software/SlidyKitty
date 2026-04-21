@@ -15,8 +15,9 @@ internal class OriginShiftSystem : EntityUpdateSystem
     private readonly PhysicsService _physicsService;
 
     private ComponentMapper<RigidBodyComponent> _rigidBodyMapper = default!;
+    private ComponentMapper<Transform2> _transformMapper = default!;
 
-    public OriginShiftSystem(OrthographicCamera camera, OriginShiftService originShiftService, PhysicsService physicsService) : base(Aspect.All(
+    public OriginShiftSystem(OrthographicCamera camera, OriginShiftService originShiftService, PhysicsService physicsService) : base(Aspect.One(
         typeof(RigidBodyComponent),
         typeof(Transform2)))
     {
@@ -28,6 +29,7 @@ internal class OriginShiftSystem : EntityUpdateSystem
     public override void Initialize(IComponentMapperService mapperService)
     {
         _rigidBodyMapper = mapperService.GetMapper<RigidBodyComponent>();
+        _transformMapper = mapperService.GetMapper<Transform2>();
     }
 
     public override void Update(GameTime gameTime)
@@ -65,8 +67,17 @@ internal class OriginShiftSystem : EntityUpdateSystem
             // to the transform components.
             foreach (var entityId in ActiveEntities)
             {
-                var rigidBodyComponent = _rigidBodyMapper.Get(entityId);
-                rigidBodyComponent.Body.Position += _physicsService.ToSimUnits(offset);
+                if (_rigidBodyMapper.Has(entityId))
+                {
+                    var rigidBodyComponent = _rigidBodyMapper.Get(entityId);
+                    rigidBodyComponent.Body.Position += _physicsService.ToSimUnits(offset);
+                }
+
+                if (_transformMapper.Has(entityId))
+                {
+                    var transform = _transformMapper.Get(entityId);
+                    transform.Position += offset;
+                }
             }
         }
     }

@@ -5,12 +5,13 @@ using MonoGame.Extended;
 using MonoGame.Extended.ECS;
 using MonoGame.Extended.ECS.Systems;
 using SlidyKitty.Code.Shared;
-using System;
 
 namespace SlidyKitty.Code.Map;
 
 internal class HillDrawSystem : EntityDrawSystem
 {
+    private const int _groundLineThickness = 15;
+
     private readonly OrthographicCamera _camera;
     private readonly ContentManager _contentManager;
     private readonly GraphicsDevice _graphicsDevice;
@@ -18,6 +19,7 @@ internal class HillDrawSystem : EntityDrawSystem
     private readonly ShapeDrawingService _shapeDrawingService;
 
     private ComponentMapper<HillComponent> _hillMapper = default!;
+    private Effect _outlineShader = default!;
     private Effect _terrainShader = default!;
     private ComponentMapper<Transform2> _transformMapper = default!;
 
@@ -43,20 +45,33 @@ internal class HillDrawSystem : EntityDrawSystem
         _hillMapper = mapperService.GetMapper<HillComponent>();
         _transformMapper = mapperService.GetMapper<Transform2>();
 
+        // Load our shader which we'll use to draw the outlines of the terrain quads for our hills
+        _outlineShader = _contentManager.Load<Effect>("Shaders/outline");
+
         // Load our custom terrain shader which we will use when drawing nice
-        // patterns on the terrain quads for our hills.
-        var shader = OperatingSystem.IsAndroid() ? "Shaders/terrain - android" : "Shaders/terrain - standard";
-        _terrainShader = _contentManager.Load<Effect>(shader);
+        // patterns on the terrain quads for our hills.        
+        _terrainShader = _contentManager.Load<Effect>("Shaders/terrain");
     }
 
     public override void Draw(GameTime gameTime)
     {
-        // Configure the shader before each draw run so that it has the latest camera position
-        if (OperatingSystem.IsAndroid())
-            ConfigureAndroidShader();
-        else
-            ConfigureShader();
+        // Set the view and projection matrices on the shader. The view matrix is based on the
+        // camera's position and orientation, and the projection matrix is an orthographic
+        // projection based on the viewport size. We multiply these together to get a combined
+        // view-projection matrix which we can use in our shader to transform our terrain
+        // vertices from world space into screen space.
+        var view = _camera.GetViewMatrix();
+        var projection = Matrix.CreateOrthographicOffCenter(0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 0, 0, 1);
+        var viewProjection = view * projection;
 
+        // Configure the shader before each draw run so that it has the latest camera position
+        // and orientation information (via the view-projection matrix) and also so that it has
+        // the latest origin shift information (so that it can correctly repeat the noise texture
+        // across the terrain quads as the camera moves around the world).
+        ConfigureHillShader(viewProjection);
+        ConfigureOutlineShader(viewProjection);
+
+        // Draw all the hills
         foreach (var entityId in ActiveEntities)
         {
             // Get our entities components
@@ -68,19 +83,11 @@ internal class HillDrawSystem : EntityDrawSystem
         }
     }
 
-    private void ConfigureShader()
+    private void ConfigureHillShader(Matrix viewProjection)
     {
-        // Set the view and projection matrices on the shader. The view matrix is based on the
-        // camera's position and orientation, and the projection matrix is an orthographic
-        // projection based on the viewport size. We multiply these together to get a combined
-        // view-projection matrix which we can use in our shader to transform our terrain
-        // vertices from world space into screen space.
-        var view = _camera.GetViewMatrix();
-        var projection = Matrix.CreateOrthographicOffCenter(0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 0, 0, 1);
-
         // So that the shader knows about the camera's position and orientation, we give
         // the combined view-projection matrix to the shader.
-        _terrainShader.Parameters["ViewProjection"].SetValue(view * projection);
+        _terrainShader.Parameters["ViewProjection"].SetValue(viewProjection);
 
         // As we're using an origin shift technique to keep world/camera positions limited (otherwise
         // they'd grow enormous for an infinite world eventually causing all sorts of issues), then
@@ -91,46 +98,13 @@ internal class HillDrawSystem : EntityDrawSystem
         // will use this to calculate how to repeat the noise texture across the terrain. This is important
         // to ensure that the noise pattern repeats correctly across the terrain as the camera moves.
         _terrainShader.Parameters["TileWidth"].SetValue(_originShiftService.Shift.X);
-
-        // The base terrain scale
-        _terrainShader.Parameters["Frequency"].SetValue(6f);
-
-        // Overall height strength
-        _terrainShader.Parameters["Amplitude"].SetValue(0.75f);
-        _terrainShader.Parameters["Octaves"].SetValue(4);
-
-        // Frequency multiplier
-        _terrainShader.Parameters["Lacunarity"].SetValue(2.0f);
-
-        // Amplitude decay
-        _terrainShader.Parameters["Gain"].SetValue(0.5f);
     }
 
-    /// <summary>
-    /// Android has some limitations around shader complexity and performance, so we 
-    /// use a simpler shader configuration for Android to ensure good performance on 
-    /// mobile devices. This method configures the shader parameters specifically for 
-    /// Android, which may involve using fewer octaves of noise or other optimizations 
-    /// to ensure that the shader runs efficiently on mobile hardware while still 
-    /// providing a visually appealing terrain effect. Might eventually combine this
-    /// with the standard shader configuration method and just have some conditional 
-    /// logic in there to adjust parameters based on the platform, but for now I'll 
-    /// keep it separate for clarity and to make it easier to experiment with 
-    /// different configurations for mobile vs desktop.
-    /// </summary>
-    private void ConfigureAndroidShader()
+    private void ConfigureOutlineShader(Matrix viewProjection)
     {
-        // Set the view and projection matrices on the shader. The view matrix is based on the
-        // camera's position and orientation, and the projection matrix is an orthographic
-        // projection based on the viewport size. We multiply these together to get a combined
-        // view-projection matrix which we can use in our shader to transform our terrain
-        // vertices from world space into screen space.
-        var view = _camera.GetViewMatrix();
-        var projection = Matrix.CreateOrthographicOffCenter(0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 0, 0, 1);
-
         // So that the shader knows about the camera's position and orientation, we give
         // the combined view-projection matrix to the shader.
-        _terrainShader.Parameters["ViewProjection"].SetValue(view * projection);
+        _outlineShader.Parameters["ViewProjection"].SetValue(viewProjection);
 
         // As we're using an origin shift technique to keep world/camera positions limited (otherwise
         // they'd grow enormous for an infinite world eventually causing all sorts of issues), then
@@ -140,19 +114,7 @@ internal class HillDrawSystem : EntityDrawSystem
         // the terrain). So we give the shader the shift value (which should always stay the same) as it
         // will use this to calculate how to repeat the noise texture across the terrain. This is important
         // to ensure that the noise pattern repeats correctly across the terrain as the camera moves.
-        _terrainShader.Parameters["TileWidth"].SetValue(_originShiftService.Shift.X);
-
-        // The base terrain scale
-        _terrainShader.Parameters["Frequency"].SetValue(6f);
-
-        // Overall height strength
-        _terrainShader.Parameters["Amplitude"].SetValue(0.75f);
-        
-        // Frequency multiplier
-        _terrainShader.Parameters["Lacunarity"].SetValue(2.0f);
-
-        // Amplitude decay
-        _terrainShader.Parameters["Gain"].SetValue(0.5f);
+        _outlineShader.Parameters["TileWidth"].SetValue(_originShiftService.Shift.X);
     }
 
     /// <summary>
@@ -207,6 +169,14 @@ internal class HillDrawSystem : EntityDrawSystem
                 x1: (int)segmentEndPosition.X, y1: (int)segmentEndPosition.Y,
                 x2: (int)segmentEndPosition.X, y2: hill.Height,
                 x3: (int)segmentStartPosition.X, y3: hill.Height);
+
+            // Draw a line to represent the ground for this segment of the hill. This will just be a simple line drawn
+            _shapeDrawingService.DrawQuadrilateral(
+                _outlineShader,
+                x0: (int)segmentStartPosition.X, y0: (int)segmentStartPosition.Y,
+                x1: (int)segmentEndPosition.X, y1: (int)segmentEndPosition.Y,
+                x2: (int)segmentEndPosition.X, y2: (int)segmentEndPosition.Y + _groundLineThickness,
+                x3: (int)segmentStartPosition.X, y3: (int)segmentStartPosition.Y + _groundLineThickness);
         }
     }
 }

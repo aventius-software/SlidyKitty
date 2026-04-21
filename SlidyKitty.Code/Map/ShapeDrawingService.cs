@@ -13,6 +13,34 @@ internal class ShapeDrawingService
     }
 
     /// <summary>
+    /// Draw a line
+    /// </summary>
+    /// <param name="effect">The shader effect to use</param>
+    /// <param name="start">Start coordinates</param>
+    /// <param name="end">End coordinates</param>
+    /// <param name="colour">The color of the line</param>
+    public void DrawLine(Effect effect, Vector2 start, Vector2 end, Color colour)
+    {
+        // Coordinates
+        var vertices = new VertexPositionColor[2];
+
+        // First triangle
+        vertices[0].Position = new Vector3(start.X, start.Y, 0f);
+        vertices[0].Color = colour;
+        vertices[1].Position = new Vector3(end.X, end.Y, 0f);
+        vertices[1].Color = colour;
+
+        // Draw...
+        _graphicsDevice.RasterizerState = RasterizerState.CullNone;
+
+        foreach (var pass in effect.CurrentTechnique.Passes)
+        {
+            pass.Apply();
+            _graphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, vertices, 0, 1);
+        }
+    }
+
+    /// <summary>
     /// A basic method to draw a quadrilateral using the specified shader effect 
     /// and coordinates. The quadrilateral is made up of 2 triangles.
     /// </summary>

@@ -2,6 +2,7 @@
 using MonoGame.Extended;
 using MonoGame.Extended.ECS;
 using MonoGame.Extended.ECS.Systems;
+using SlidyKitty.Code.Extensions;
 using SlidyKitty.Code.Physics;
 using System;
 
@@ -9,7 +10,7 @@ namespace SlidyKitty.Code.Map;
 
 internal class HillUpdateSystem : EntityUpdateSystem
 {
-    private const int _hillHeight = 1000;
+    private const int _hillHeight = 4000;
     private const int _maxSteepness = 35;
     private const int _minSteepness = -35;
     private const int _numberOfSegmentsPerHill = 64;
@@ -38,13 +39,15 @@ internal class HillUpdateSystem : EntityUpdateSystem
         _rigidBodyMapper = mapperService.GetMapper<RigidBodyComponent>();
         _transformMapper = mapperService.GetMapper<Transform2>();
 
+        var hillWidth = _numberOfSegmentsPerHill * _segmentWidth;
+
         // Create some initial hills to start with, we will add more as the game scrolls in the update method
         for (var numberOfInitialHills = 0; numberOfInitialHills < 5; numberOfInitialHills++)
         {
             // Set the position of the hill based on the number of initial hills we have already created, so
             // they are spaced out correctly. We start at zero and then add the width of each hill (number of
             // segments * segment width) for each hill we create
-            var position = Vector2.Zero + new Vector2(numberOfInitialHills * _numberOfSegmentsPerHill * _segmentWidth, 0);
+            var position = new Vector2(-hillWidth, 0) + new Vector2(numberOfInitialHills * hillWidth, 0);
 
             // Add a new hill at this position
             AddNewHill(position);
@@ -67,7 +70,7 @@ internal class HillUpdateSystem : EntityUpdateSystem
 
             // Check if the hill is off the left of the camera, and if so then we remove it and
             // add a new one to the right of the screen so we have an 'infinite' scrolling hill effect
-            if (IsPositionOffCameraToTheLeft(hillPosition))
+            if (_camera.IsPositionOffCameraToTheLeft(hillPosition))
             {
                 // Yes, ok, first remove the rigid body for the hill 
                 // so it can dispose of any resources correctly (i.e. physics)
@@ -105,18 +108,5 @@ internal class HillUpdateSystem : EntityUpdateSystem
             segmentWidth: _segmentWidth,
             steepness: _random.Next(_minSteepness, _maxSteepness),
             height: _hillHeight);
-    }
-
-    /// <summary>
-    /// Check if the specified position is off the left of the camera, we use this mostly for checking the
-    /// position of a hill (plus its width) to determine when to remove it and add a new one to the right of 
-    /// the screen. If its off the screen to the left then we can remove it. This allows us to have an infinite
-    /// scrolling world which never ends without using up all our memory by creating new hills indefinitely.
-    /// </summary>
-    /// <param name="position">The position to check.</param>
-    /// <returns>True or false depending on whether the specified position is off the screen to the left</returns>
-    private bool IsPositionOffCameraToTheLeft(Vector2 position)
-    {
-        return position.X < _camera.BoundingRectangle.Left;
-    }
+    }    
 }
