@@ -10,7 +10,22 @@ namespace SlidyKitty.Code.Map;
 
 internal class HillDrawSystem : EntityDrawSystem
 {
+    private const int _groundLineShadowThickness = 10;
     private const int _groundLineThickness = 15;
+
+    private readonly Vector3 _groundLineColour = new(
+        (1.0f / 255.0f) * 40,
+        (1.0f / 255.0f) * 140,
+        (1.0f / 255.0f) * 40);
+
+    private readonly float _groundLineColourAlpha = (1.0f / 255.0f) * 255;
+
+    private readonly Vector3 _groundLineShadowColour = new(
+        (1.0f / 255.0f) * 1,
+        (1.0f / 255.0f) * 1,
+        (1.0f / 255.0f) * 1);
+
+    private readonly float _groundLineShadowColourAlpha = (1.0f / 255.0f) * 75;
 
     private readonly OrthographicCamera _camera;
     private readonly ContentManager _contentManager;
@@ -64,27 +79,6 @@ internal class HillDrawSystem : EntityDrawSystem
         var projection = Matrix.CreateOrthographicOffCenter(0, _graphicsDevice.Viewport.Width, _graphicsDevice.Viewport.Height, 0, 0, 1);
         var viewProjection = view * projection;
 
-        // Configure the shader before each draw run so that it has the latest camera position
-        // and orientation information (via the view-projection matrix) and also so that it has
-        // the latest origin shift information (so that it can correctly repeat the noise texture
-        // across the terrain quads as the camera moves around the world).
-        ConfigureHillShader(viewProjection);
-        ConfigureOutlineShader(viewProjection);
-
-        // Draw all the hills
-        foreach (var entityId in ActiveEntities)
-        {
-            // Get our entities components
-            var hillComponent = _hillMapper.Get(entityId);
-            var transformComponent = _transformMapper.Get(entityId);
-
-            // Draw this hill
-            DrawHill(hillComponent, transformComponent);
-        }
-    }
-
-    private void ConfigureHillShader(Matrix viewProjection)
-    {
         // So that the shader knows about the camera's position and orientation, we give
         // the combined view-projection matrix to the shader.
         _terrainShader.Parameters["ViewProjection"].SetValue(viewProjection);
@@ -98,23 +92,21 @@ internal class HillDrawSystem : EntityDrawSystem
         // will use this to calculate how to repeat the noise texture across the terrain. This is important
         // to ensure that the noise pattern repeats correctly across the terrain as the camera moves.
         _terrainShader.Parameters["TileWidth"].SetValue(_originShiftService.Shift.X);
-    }
 
-    private void ConfigureOutlineShader(Matrix viewProjection)
-    {
         // So that the shader knows about the camera's position and orientation, we give
         // the combined view-projection matrix to the shader.
         _outlineShader.Parameters["ViewProjection"].SetValue(viewProjection);
 
-        // As we're using an origin shift technique to keep world/camera positions limited (otherwise
-        // they'd grow enormous for an infinite world eventually causing all sorts of issues), then
-        // we need to make sure that the shader uses a repeating noise texture in the shader to create
-        // patterns on the terrain. So, if we basically have a 'tiled' shader, we need to tell the shader
-        // how wide the terrain is in world units so that it can repeat the noise texture correctly across
-        // the terrain). So we give the shader the shift value (which should always stay the same) as it
-        // will use this to calculate how to repeat the noise texture across the terrain. This is important
-        // to ensure that the noise pattern repeats correctly across the terrain as the camera moves.
-        _outlineShader.Parameters["TileWidth"].SetValue(_originShiftService.Shift.X);
+        // Draw all the hills
+        foreach (var entityId in ActiveEntities)
+        {
+            // Get our entities components
+            var hillComponent = _hillMapper.Get(entityId);
+            var transformComponent = _transformMapper.Get(entityId);
+
+            // Draw this hill
+            DrawHill(hillComponent, transformComponent);
+        }
     }
 
     /// <summary>
@@ -170,13 +162,27 @@ internal class HillDrawSystem : EntityDrawSystem
                 x2: (int)segmentEndPosition.X, y2: hill.Height,
                 x3: (int)segmentStartPosition.X, y3: hill.Height);
 
-            // Draw a line to represent the ground for this segment of the hill. This will just be a simple line drawn
+            // Draw a line to represent the ground for this segment of the hill.
+            _outlineShader.Parameters["RGB"].SetValue(_groundLineColour);
+            _outlineShader.Parameters["Alpha"].SetValue(_groundLineColourAlpha);
+
             _shapeDrawingService.DrawQuadrilateral(
                 _outlineShader,
                 x0: (int)segmentStartPosition.X, y0: (int)segmentStartPosition.Y,
                 x1: (int)segmentEndPosition.X, y1: (int)segmentEndPosition.Y,
                 x2: (int)segmentEndPosition.X, y2: (int)segmentEndPosition.Y + _groundLineThickness,
                 x3: (int)segmentStartPosition.X, y3: (int)segmentStartPosition.Y + _groundLineThickness);
+
+            // Draw a 'shadow' line to under the ground line for this segment of the hill.
+            _outlineShader.Parameters["RGB"].SetValue(_groundLineShadowColour);
+            _outlineShader.Parameters["Alpha"].SetValue(_groundLineShadowColourAlpha);
+
+            _shapeDrawingService.DrawQuadrilateral(
+                _outlineShader,
+                x0: (int)segmentStartPosition.X, y0: (int)segmentStartPosition.Y + _groundLineThickness,
+                x1: (int)segmentEndPosition.X, y1: (int)segmentEndPosition.Y + _groundLineThickness,
+                x2: (int)segmentEndPosition.X, y2: (int)segmentEndPosition.Y + _groundLineThickness + _groundLineShadowThickness,
+                x3: (int)segmentStartPosition.X, y3: (int)segmentStartPosition.Y + _groundLineThickness + _groundLineShadowThickness);
         }
     }
 }

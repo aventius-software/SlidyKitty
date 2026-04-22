@@ -9,7 +9,9 @@
 
 // Input parameters
 matrix ViewProjection;
-float TileWidth;
+
+float3 RGB;
+float Alpha;
 
 // Define the input for the vertex shader
 struct VertexInput
@@ -38,41 +40,8 @@ VertexOutput MainVS(VertexInput input)
 
 // Now we define our pixel shader
 float4 MainPS(VertexOutput input) : SV_TARGET
-{
-    // Keep existing setup but create a grid coordinate variable for logic
-    float2 tileCoord = input.WorldPos / TileWidth;
-    
-    // Wrap explicitly
-    tileCoord = tileCoord * 40;
-    
-    // Calculate the integer grid index
-    float x = floor(tileCoord.x);
-    float y = floor(tileCoord.y);
-    
-    // Checkerboard Logic: If sum is even, one color. Else another.
-    // We can use mod or bitwise logic.
-    // Note: The original 'uv' wrapper might be intended for texture mapping later, 
-    // but for the checkerboard we need the grid index.
-    float check = frac(x + y); // 0 or 1 if we treat x+y as int
-    
-    float3 color;
-    
-    if (floor(x + y) % 2 == 0)
-    {
-        float red = (1.0 / 255.0) * 40;
-        float green = (1.0 / 255.0) * 140;
-        float blue = (1.0 / 255.0) * 40;
-        color = float3(red, green, blue);
-    }
-    else
-    {
-        float red = (1.0 / 255.0) * 41;
-        float green = (1.0 / 255.0) * 141;
-        float blue = (1.0 / 255.0) * 41;
-        color = float3(red, green, blue);
-    }
-
-    return float4(color, 1);
+{    
+    return float4(RGB, Alpha);
 }
 
 technique DefaultTechnique
