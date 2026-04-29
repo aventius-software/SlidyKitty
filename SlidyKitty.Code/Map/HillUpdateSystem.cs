@@ -11,8 +11,10 @@ namespace SlidyKitty.Code.Map;
 internal class HillUpdateSystem : EntityUpdateSystem
 {
     private const int _hillHeight = 4000;
-    private const int _maxSteepness = 35;
-    private const int _minSteepness = -35;
+    private const int _maxDownhillSteepness = -35;
+    private const int _maxDownhillSteepnessForFlatHills = -10;
+    private const int _maxUphillSteepness = 35;
+    private const int _maxUphillSteepnessForFlatHills = 10;
     private const int _numberOfSegmentsPerHill = 64;
     private const int _segmentWidth = 16;
 
@@ -49,8 +51,18 @@ internal class HillUpdateSystem : EntityUpdateSystem
             // segments * segment width) for each hill we create
             var position = new Vector2(-hillWidth, 0) + new Vector2(numberOfInitialHills * hillWidth, 0);
 
+            // We can optionally specify the steepness of the hill, if we don't then a random steepness will be
+            // generated for it. For the first hill we want to specify a downward slope so that we have some
+            // initial momentum when the game starts, for the rest of the hills we'll just generate a random
+            // steepness
+            int? steepness = null;
+
+            // Start with a hill that slopes downwards so we have some initial momentum when the game starts
+            if (numberOfInitialHills == 0)
+                steepness = _maxDownhillSteepness;
+
             // Add a new hill at this position
-            AddNewHill(position);
+            AddNewHill(position, steepness);
         }
     }
 
@@ -92,11 +104,24 @@ internal class HillUpdateSystem : EntityUpdateSystem
     /// to the new hill entity and set it up correctly (e.g. create the physics body, calculate the segments 
     /// etc.) based on the parameters we pass in here (e.g. position, height, steepness etc.)
     /// </summary>
-    /// <param name="position"></param>
-    private void AddNewHill(Vector2 position)
+    /// <param name="position">World position of the hill</param>
+    /// <param name="steepness">Optional hill steepness, if null specified then a random amount is used</param>
+    private void AddNewHill(Vector2 position, int? steepness = null)
     {
         // Create an entity for the hill
         var entity = CreateEntity();
+
+        // Determine the steepness of the hill, if a specific steepness is provided then use that, otherwise
+        // generate a random steepness for the hill within the defined min and max steepness values
+        var hillSteepness = steepness ?? _random.Next(_maxDownhillSteepness, _maxUphillSteepness);
+
+        // We don't want too many flat hills, so if the steepness is between a certain range, for
+        // example -10 and 10 then we will make it a bit more extreme
+        if (hillSteepness > _maxDownhillSteepnessForFlatHills && hillSteepness < _maxUphillSteepnessForFlatHills)
+        {
+            // Make the hill a bit steeper instead of too flat...
+            hillSteepness = hillSteepness < 0 ? _maxDownhillSteepnessForFlatHills : _maxUphillSteepnessForFlatHills;
+        }
 
         // The hill factory will add the components to it and set it up correctly
         _hillFactory.CreateHill(
@@ -106,7 +131,7 @@ internal class HillUpdateSystem : EntityUpdateSystem
             startingAngle: 0,
             numberOfSegments: _numberOfSegmentsPerHill,
             segmentWidth: _segmentWidth,
-            steepness: _random.Next(_minSteepness, _maxSteepness),
+            steepness: hillSteepness,
             height: _hillHeight);
-    }    
+    }
 }

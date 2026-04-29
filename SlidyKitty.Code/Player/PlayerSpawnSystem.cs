@@ -45,7 +45,7 @@ internal class PlayerSpawnSystem : EntitySystem
 
         // Set the position
         var transformComponent = entity.Get<Transform2>();
-        transformComponent.Position = new Vector2(150, -150);
+        transformComponent.Position = new Vector2(-150, -250);
 
         // Create the physics body for the player
         var body = _physicsService.World.CreateBody(_physicsService.ToSimUnits(transformComponent.Position), 0, BodyType.Dynamic);
