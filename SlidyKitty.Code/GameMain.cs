@@ -161,7 +161,7 @@ public class GameMain : Game
     protected override void LoadContent()
     {
         // Show the starting screen, which will be the main menu screen in this case
-        var startingScreen = _serviceProvider.GetRequiredService<GamePlayScreen>();
+        var startingScreen = _serviceProvider.GetRequiredService<SplashScreen>();
         _screenManager.ShowScreen(startingScreen);
     }
 

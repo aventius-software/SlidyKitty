@@ -22,7 +22,7 @@ internal class SkyDrawSystem : DrawSystem
     public override void Initialize(World world)
     {
         // Load the sky texture, this will be drawn as a background behind all other entities in the game
-        _skyTexture = _contentManager.Load<Texture2D>("Background/Sky");
+        _skyTexture = _contentManager.Load<Texture2D>("Map/Sky");
 
         base.Initialize(world);
     }

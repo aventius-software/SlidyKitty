@@ -14,7 +14,7 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin Background/Sky.png
+#begin Map/Sky.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -24,9 +24,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Background/Sky.png
+/build:Map/Sky.png
 
-#begin Background/Sun.png
+#begin Map/Sun.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -36,7 +36,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Background/Sun.png
+/build:Map/Sun.png
 
 #begin Characters/kitty-atlas.json
 /importer:TexturePackerJsonImporter
@@ -55,7 +55,7 @@
 /processorParam:TextureFormat=Color
 /build:Characters/Kitty.png
 
-#begin Logos/Aventius.png
+#begin Splash/Aventius.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -65,17 +65,23 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Logos/Aventius.png
+/build:Splash/Aventius.png
 
-#begin Shaders/outline.fx
+#begin Map/Ground Outline Shader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Shaders/outline.fx
+/build:Map/Ground Outline Shader.fx
 
-#begin Shaders/terrain.fx
+#begin Map/Default Terrain Shader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
-/build:Shaders/terrain.fx
+/build:Map/Default Terrain Shader.fx
 
+#begin Splash/Font.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:Splash/Font.spritefont

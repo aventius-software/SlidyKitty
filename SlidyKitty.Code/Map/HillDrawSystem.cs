@@ -61,11 +61,11 @@ internal class HillDrawSystem : EntityDrawSystem
         _transformMapper = mapperService.GetMapper<Transform2>();
 
         // Load our shader which we'll use to draw the outlines of the terrain quads for our hills
-        _outlineShader = _contentManager.Load<Effect>("Shaders/outline");
+        _outlineShader = _contentManager.Load<Effect>("Map/Ground Outline Shader");
 
         // Load our custom terrain shader which we will use when drawing nice
         // patterns on the terrain quads for our hills.        
-        _terrainShader = _contentManager.Load<Effect>("Shaders/terrain");
+        _terrainShader = _contentManager.Load<Effect>("Map/Default Terrain Shader");
     }
 
     public override void Draw(GameTime gameTime)
