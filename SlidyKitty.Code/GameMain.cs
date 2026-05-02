@@ -119,6 +119,7 @@ public class GameMain : Game
         services.AddSingleton<ShapeDrawingService>();
         services.AddSingleton<HillFactory>();
         services.AddSingleton<OriginShiftService>();
+        services.AddSingleton<InputService>();
 
         // Add our ECS world        
         services.AddSingleton<WorldBuilder>();

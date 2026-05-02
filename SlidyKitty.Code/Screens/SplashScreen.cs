@@ -10,7 +10,7 @@ namespace SlidyKitty.Code.Screens;
 internal class SplashScreen : Screen
 {
     private readonly ContentManager _contentManager;
-    private readonly GamePlayScreen _gamePlayScreen;
+    private readonly TitleScreen _titleScreen;
     private readonly ScreenManager _screenManager;
     private readonly SpriteBatch _spriteBatch;
 
@@ -19,12 +19,12 @@ internal class SplashScreen : Screen
     private Texture2D _logo = default!;
     private float _scale = 0.5f;
 
-    public SplashScreen(ContentManager contentManager, ScreenManager screenManager, SpriteBatch spriteBatch, GamePlayScreen gamePlayScreen)
+    public SplashScreen(ContentManager contentManager, ScreenManager screenManager, SpriteBatch spriteBatch, TitleScreen titleScreen)
     {
         _contentManager = contentManager;
         _screenManager = screenManager;
         _spriteBatch = spriteBatch;
-        _gamePlayScreen = gamePlayScreen;
+        _titleScreen = titleScreen;
     }
 
     public override void Draw(GameTime gameTime)
@@ -87,12 +87,9 @@ internal class SplashScreen : Screen
         if (_displayTimer > 0) _displayTimer -= deltaTime / 2;
         else if (_scale > 0) _scale -= deltaTime / 2;
         else
-        {
-            // Create a fade transition (black, 0.5 seconds)
-            var fadeTransition = new FadeTransition(_spriteBatch.GraphicsDevice, Color.Black, 0.5f);
-
+        {            
             // Change to the GamePlayScreen with the fade transition
-            _screenManager.ShowScreen(_gamePlayScreen, fadeTransition);
+            _screenManager.ShowScreen(_titleScreen);
         }
     }
 }
